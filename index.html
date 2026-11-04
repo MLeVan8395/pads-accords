@@ -242,24 +242,32 @@ function accSym(a,x,y){
   if(a===2) return `<path d="M${x+1} ${y-3}l6 6M${x+7} ${y-3}l-6 6" stroke="${INK}" stroke-width="2.2"/>`;
   return `<path d="M${x+2} ${y-9}V${y+4}M${x+7} ${y-4}V${y+9}M${x+2} ${y-1}L${x+7} ${y-3}M${x+2} ${y+4}L${x+7} ${y+2}" stroke="${INK}" stroke-width="1.4"/>`;
 }
-function fClef(o,x,yF){ o.push(`<circle cx="${x+10}" cy="${yF}" r="3.6" fill="${INK}"/><path d="M${x+8} ${yF} C${x+8} ${yF-13} ${x+32} ${yF-13} ${x+32} ${yF+3} C${x+32} ${yF+17} ${x+19} ${yF+26} ${x+6} ${yF+31}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/><circle cx="${x+39}" cy="${yF-5}" r="2.2" fill="${INK}"/><circle cx="${x+39}" cy="${yF+5}" r="2.2" fill="${INK}"/>`); }
-function ledgers(o,p,y0,base,xa,xb){ for(let q=base-2;q>=p;q-=2){ const yy=y0+4*SPc-(q-base)*Hc; o.push(`<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="${INK}"/>`); } for(let q=base+10;q<=p;q+=2){ const yy=y0+4*SPc-(q-base)*Hc; o.push(`<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="${INK}"/>`); } }
+function fClef(o,x,yF){ // clé de fa pleine, la tête sur la 4e ligne
+  o.push(`<circle cx="${x+5}" cy="${yF}" r="4.6" fill="${INK}"/>`);
+  o.push(`<path d="M${x+1.5} ${yF-1} C${x+2} ${yF-12} ${x+25} ${yF-15} ${x+30} ${yF+1} C${x+34} ${yF+16} ${x+21} ${yF+29} ${x+1} ${yF+37} C${x+15} ${yF+27} ${x+24} ${yF+15} ${x+22} ${yF+2} C${x+20} ${yF-9} ${x+8} ${yF-9} ${x+5} ${yF-2} Z" fill="${INK}"/>`);
+  o.push(`<circle cx="${x+38}" cy="${yF-5}" r="2.5" fill="${INK}"/><circle cx="${x+38}" cy="${yF+5}" r="2.5" fill="${INK}"/>`);
+}
 // accord en rondes sur grand-portée : tre / bas = notes {l,a,o}
 function engraveGrand(tre,bas){
-  const left=62, colW=78, top=24, gap=6*SPc, W=left+colW+10, topB=top+4*SPc+gap, Ht=topB+4*SPc+28, x0=left+colW/2, o=[];
-  for(let l=0;l<5;l++){ o.push(`<line x1="8" y1="${top+l*SPc}" x2="${W-6}" y2="${top+l*SPc}" stroke="${INK}"/>`); o.push(`<line x1="8" y1="${topB+l*SPc}" x2="${W-6}" y2="${topB+l*SPc}" stroke="${INK}"/>`); }
-  o.push(`<line x1="8" y1="${top}" x2="8" y2="${topB+4*SPc}" stroke="${INK}" stroke-width="1.5"/>`);
+  const left=74, colW=74, top=30, gap=7*SPc, W=left+colW+12, topB=top+4*SPc+gap, Ht=topB+4*SPc+30, x0=left+colW/2, o=[];
+  const bx=4, sx=16, H=topB+4*SPc-top;
+  for(let l=0;l<5;l++){ o.push(`<line x1="${sx}" y1="${top+l*SPc}" x2="${W-6}" y2="${top+l*SPc}" stroke="${INK}"/>`); o.push(`<line x1="${sx}" y1="${topB+l*SPc}" x2="${W-6}" y2="${topB+l*SPc}" stroke="${INK}"/>`); }
+  // accolade + barre de système + double barre finale
+  o.push(`<path d="M${bx+9} ${top} C${bx-1} ${top+H*.12} ${bx+9} ${top+H*.36} ${bx+1} ${top+H/2} C${bx+9} ${top+H*.64} ${bx-1} ${top+H*.88} ${bx+9} ${top+H} C${bx+3} ${top+H*.86} ${bx+11} ${top+H*.64} ${bx+3} ${top+H/2} C${bx+11} ${top+H*.36} ${bx+3} ${top+H*.14} ${bx+9} ${top} Z" fill="${INK}"/>`);
+  o.push(`<line x1="${sx}" y1="${top}" x2="${sx}" y2="${topB+4*SPc}" stroke="${INK}" stroke-width="1.6"/>`);
   [W-10,W-6].forEach((x,i)=>o.push(`<line x1="${x}" y1="${top}" x2="${x}" y2="${topB+4*SPc}" stroke="${INK}" stroke-width="${i?3.5:1}"/>`));
-  o.push(glyph('treble',12,top+31,40)); fClef(o,6,topB+SPc);
+  o.push(glyph('treble',20,top+3*SPc+1,56)); fClef(o,22,topB+SPc);
   const staff=(notes,y0,base)=>{ let prevP=null, prevShift=false; const accCols=[];
     notes.slice().sort((a,b)=>dpos(a)-dpos(b)).forEach(n=>{ const p=dpos(n), y=y0+4*SPc-(p-base)*Hc;
-      let shift=false; if(prevP!==null&&p-prevP===1&&!prevShift) shift=true; if(prevP===p) return; prevShift=shift; prevP=p; const x=x0+(shift?13:0);
-      ledgers(o,p,y0,base,x0-12,x0+12+(shift?13:0));
-      o.push(`<ellipse cx="${x}" cy="${y}" rx="7" ry="4.6" fill="none" stroke="${INK}" stroke-width="2.6" transform="rotate(-15 ${x} ${y})"/>`);
-      if(n.a){ let c=0; while(accCols.some(a=>a.c===c&&Math.abs(a.p-p)<6)) c++; accCols.push({c,p}); o.push(accSym(n.a,x0-22-c*11,y)); } }); };
+      let shift=false; if(prevP!==null&&p-prevP===1&&!prevShift) shift=true; if(prevP===p) return; prevShift=shift; prevP=p; const x=x0+(shift?14:0);
+      ledgers(o,p,y0,base,x0-13,x0+13+(shift?14:0));
+      o.push(`<ellipse cx="${x}" cy="${y}" rx="7.2" ry="4.8" fill="none" stroke="${INK}" stroke-width="2.8" transform="rotate(-20 ${x} ${y})"/>`);
+      if(n.a){ let c=0; while(accCols.some(a=>a.c===c&&Math.abs(a.p-p)<6)) c++; accCols.push({c,p}); o.push(accSym(n.a,x0-23-c*11,y)); } }); };
   staff(tre,top,30); staff(bas,topB,18);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${Ht}" style="width:100%;height:auto;display:block" role="img" aria-label="Accord sur double portée">${o.join('')}</svg>`;
 }
+
+function ledgers(o,p,y0,base,xa,xb){ for(let q=base-2;q>=p;q-=2){ const yy=y0+4*SPc-(q-base)*Hc; o.push(`<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="${INK}"/>`); } for(let q=base+10;q<=p;q+=2){ const yy=y0+4*SPc-(q-base)*Hc; o.push(`<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="${INK}"/>`); } }
 function chordStaff(midis,bassMidi,nn){ const tre=[], bas=[]; midis.forEach(m=>(m>=60?tre:bas).push(spell(m,nn))); if(bassMidi!=null) bas.push(spell(bassMidi,nn)); return engraveGrand(tre,bas); }
 
 /* ================= ÉTAT ================= */
