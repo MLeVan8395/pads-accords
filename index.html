@@ -112,7 +112,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
         <button class="btn" id="stop">■ Stop</button><span class="beat" id="beat"><i></i><i></i><i></i><i></i></span></div>
     </div>
     <div class="row" style="margin-top:10px">
-      <label class="chk"><input type="checkbox" id="four"> Accords à 4 sons</label>
+      <div class="field"><span class="lbl">Accords</span><div class="seg" id="nb"></div></div>
       <label class="chk"><input type="checkbox" id="bass"> Basse (fondamentale)</label>
       <label class="chk"><input type="checkbox" id="lead"> Enchaînement doux</label>
       <div class="field"><span class="lbl">Octave</span><div class="seg" id="oct"></div></div>
@@ -151,7 +151,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
     <div class="grilles" id="grilles"></div>
     <p class="gdesc" id="gdesc">Choisis une grille : les pads à jouer sont numérotés dans l'ordre.</p>
     <details class="help"><summary>Comprendre : les accords de la tonalité</summary>
-      <p>On construit un accord sur chaque note de la gamme en <b>empilant des tierces</b> (une note sur deux de la gamme). En majeur, on obtient toujours la même suite : <b>I, IIm, IIIm, IV, V, VIm, VIIdim</b>. Avec 4 sons : Imaj7, IIm7, IIIm7, IVmaj7, V7, VIm7, VIIm7♭5.</p>
+      <p>On construit un accord sur chaque note de la gamme en <b>empilant des tierces</b> (une note sur deux de la gamme). En majeur, on obtient toujours la même suite : <b>I, IIm, IIIm, IV, V, VIm, VIIdim</b>. Avec 4 sons : Imaj7, IIm7, IIIm7, IVmaj7, V7, VIm7, VIIm7♭5. Avec 5 sons (on ajoute la <b>neuvième</b>) : Imaj9, IIm9, IIIm7(♭9), IVmaj9, V9, VIm9, VIIm7♭5(♭9).</p>
       <p>Les <b>degrés</b> (chiffres romains) ne changent pas quand on change de tonalité : une grille I V VIm IV donne C G Am F en C, et G D Em C en G. C'est ce qui permet de transposer.</p>
     </details>
     <details class="help"><summary>Comprendre : les dominantes secondaires</summary>
@@ -191,14 +191,16 @@ const MODES={
 };
 const MAJ=[0,2,4,5,7,9,11], ROM=['I','II','III','IV','V','VI','VII'];
 const T3={'4,7':'','3,7':'m','3,6':'dim','4,8':'+'};
+const T5={'4,7,11,2':'maj9','4,7,10,2':'9','3,7,10,2':'m9','3,7,10,1':'m7(♭9)','3,6,10,1':'m7♭5(♭9)','3,6,10,2':'m9♭5','4,7,10,1':'7(♭9)','4,7,10,3':'7(♯9)','3,7,11,2':'m(maj9)','4,8,11,2':'maj9♯5','4,8,10,2':'9♯5','3,6,9,1':'dim7(♭9)','3,6,9,2':'dim7(9)'};
 const T4={'4,7,11':'maj7','4,7,10':'7','3,7,10':'m7','3,6,10':'m7♭5','3,6,9':'dim7','3,7,11':'m(maj7)','4,8,11':'maj7♯5','4,8,10':'7♯5'};
 const pcOf=n=>((NAT[n.l]+n.a)%12+12)%12;
 const nameEN=n=>LET[n.l]+ACC[n.a], nameFR=n=>FRN[n.l]+ACC[n.a];
 function scaleOf(t,mode){ const tp=pcOf(t); return MODES[mode].iv.map((x,i)=>{ const l=(t.l+i)%7; let a=((tp+x-NAT[l])%12+12)%12; if(a>6)a-=12; return {l,a}; }); }
-function chordOf(sc,i,four,tonicPc){
-  const idx=four?[0,2,4,6]:[0,2,4], notes=idx.map(k=>sc[(i+k)%7]), rp=pcOf(notes[0]);
+function chordOf(sc,i,nb,tonicPc){
+  const n=nb===true?4:(+nb||3);
+  const idx=[0,2,4,6,8].slice(0,n), notes=idx.map(k=>sc[(i+k)%7]), rp=pcOf(notes[0]);
   const ints=notes.slice(1).map(n=>(pcOf(n)-rp+12)%12);
-  const s3=T3[ints.slice(0,2).join(',')]??'?', s=four?(T4[ints.join(',')]??'?'):s3;
+  const s3=T3[ints.slice(0,2).join(',')]??'?', s4=T4[ints.slice(0,3).join(',')]??'?', s=n===3?s3:n===4?s4:(T5[ints.join(',')]??s4+'(9)');
   let diff=((rp-tonicPc+12)%12)-MAJ[i]; if(diff>6)diff-=12; if(diff<-6)diff+=12;
   const pre=diff<0?'♭'.repeat(-diff):'♯'.repeat(diff);
   return {nn:notes, name:nameEN(notes[0])+s, roman:pre+ROM[i]+s, tri:pre+ROM[i]+s3, pcs:notes.map(pcOf), fr:notes.map(nameFR).join(' '), key:rp+'|'+ints.join(',')};
@@ -207,13 +209,15 @@ function chordOf(sc,i,four,tonicPc){
 
 /* dominantes secondaires : d = degré visé dans la gamme de la tonalité */
 const SECS={v:{n:'Dominante (V7)',lbl:'V7/',iv:[0,4,7,10],dl:4,dp:7,suf:'7'}, dim:{n:'Diminuée (VII°7)',lbl:'VII°7/',iv:[0,3,6,9],dl:6,dp:11,suf:'dim7'}, sub:{n:'Substitution tritonique (SubV7)',lbl:'SubV7/',iv:[0,4,7,10],dl:1,dp:1,suf:'7'}};
-function secChord(kind,t,mode,d){
+function secChord(kind,t,mode,d,nb){
   const sc=scaleOf(t,mode), tg=sc[d], tgp=pcOf(tg), S=SECS[kind], tonicPc=pcOf(t);
   const rl=(tg.l+S.dl)%7, rp=(tgp+S.dp)%12, mk=(l,pc)=>{ let a=((pc-NAT[l])%12+12)%12; if(a>6)a-=12; return {l,a}; };
-  const notes=S.iv.map((iv,k)=>mk((rl+2*k)%7,(rp+iv)%12));
+  const tgC=chordOf(scaleOf(t,mode),d,3,pcOf(t)), tgMin=(tgC.pcs[1]-tgC.pcs[0]+12)%12===3, five=(+nb===5)&&kind!=='dim', iv=five?S.iv.concat([kind==='v'&&tgMin?1:2]):S.iv;
+  const suf=five?(kind==='v'&&tgMin?'7(♭9)':'9'):S.suf;
+  const notes=iv.map((x,k)=>mk((rl+2*k)%7,(rp+x)%12));
   let diff=((tgp-tonicPc+12)%12)-MAJ[d]; if(diff>6)diff-=12; if(diff<-6)diff+=12;
-  const roman=S.lbl+(diff<0?'♭'.repeat(-diff):'♯'.repeat(diff))+ROM[d], target=chordOf(sc,d,false,tonicPc);
-  return {nn:notes, name:nameEN(notes[0])+S.suf, roman, tri:roman, pcs:notes.map(pcOf), ints:S.iv.slice(1), fr:notes.map(nameFR).join(' '), key:'s'+rp+'|'+S.iv.join(','), sec:kind, target:target.name};
+  const pre=(diff<0?'♭'.repeat(-diff):'♯'.repeat(diff))+ROM[d], tri=S.lbl+pre, roman=five?(kind==='sub'?'SubV'+suf+'/':'V'+suf+'/')+pre:tri, target=chordOf(sc,d,3,tonicPc);
+  return {nn:notes, name:nameEN(notes[0])+suf, roman, tri, pcs:notes.map(pcOf), ints:iv.slice(1), fr:notes.map(nameFR).join(' '), key:'s'+rp+'|'+iv.join(','), sec:kind, target:target.name};
 }
 const secTargets=(t,mode)=>{ const sc=scaleOf(t,mode), tp=pcOf(t); return [0,1,2,3,4,5,6].filter(i=>{ const c=chordOf(sc,i,false,tp), s=c.name.slice(nameEN(sc[i]).length); return s===''||s==='m'; }); };
 
@@ -252,8 +256,8 @@ function engraveGrand(tre,bas){
 function chordStaff(midis,bassMidi,nn){ const tre=[], bas=[]; midis.forEach(m=>(m>=60?tre:bas).push(spell(m,nn))); if(bassMidi!=null) bas.push(spell(bassMidi,nn)); return engraveGrand(tre,bas); }
 
 /* ================= ÉTAT ================= */
-const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', oct:'z', sound:'ep', play:'tenu', bpm:96, pattern:'croches', four:false, bass:true, lead:true, rev:0.25, vol:0.8};
-try{ Object.assign(P, JSON.parse(localStorage.getItem('pads-reglages')||'{}')); }catch(e){}
+const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', oct:'z', sound:'ep', play:'tenu', bpm:96, pattern:'croches', nb:'3', bass:true, lead:true, rev:0.25, vol:0.8};
+try{ const s=JSON.parse(localStorage.getItem('pads-reglages')||'{}'); if(s.nb==null&&'four' in s) s.nb=s.four?'4':'3'; delete s.four; Object.assign(P,s); }catch(e){}
 const save=()=>{ try{ localStorage.setItem('pads-reglages',JSON.stringify(P)); }catch(e){} };
 
 /* ================= AUDIO ================= */
@@ -381,18 +385,19 @@ function seg(id,items,key,c){ const box=$(id); box.innerHTML=''; if(c) box.style
     b.onclick=()=>{ P[key]=k; [...box.children].forEach(x=>x.classList.toggle('on',x===b)); save(); onChange(key); }; box.appendChild(b); }); }
 seg('sound',SOUNDS,'sound');
 seg('play',{tenu:{n:'Tenu'},maintenu:{n:'Maintenu'},rythme:{n:'Rythme'}},'play');
+seg('nb',{'3':{n:'3 sons'},'4':{n:'4 sons'},'5':{n:'5 sons'}},'nb');
 seg('oct',{m1:{n:'−1'},z:{n:'0'},p1:{n:'+1'},p2:{n:'+2'}},'oct');
 const SECSEG={v:{n:'Dominante V7'},dim:{n:'Diminuée VII°7'},sub:{n:'Substitution tritonique'}};
 seg('secmode',SECSEG,'sec','var(--sec)');
 Object.entries(PATTERNS).forEach(([k,p])=>$('pattern').add(new Option(p.n,k)));
 $('tonic').value=P.tonic; $('mode').value=P.mode; $('borrow').value=P.borrow; $('pattern').value=P.pattern;
-$('bpm').value=P.bpm; $('bpmOut').textContent=P.bpm+' bpm'; $('four').checked=P.four; $('bass').checked=P.bass; $('lead').checked=P.lead; $('rev').value=P.rev; $('vol').value=P.vol;
+$('bpm').value=P.bpm; $('bpmOut').textContent=P.bpm+' bpm'; $('bass').checked=P.bass; $('lead').checked=P.lead; $('rev').value=P.rev; $('vol').value=P.vol;
 $('tonic').onchange=e=>{P.tonic=+e.target.value; save(); onChange('tonic');};
 $('mode').onchange=e=>{P.mode=e.target.value; if(P.borrow===P.mode) P.borrow = P.mode==='ionien'?'eolien':'ionien'; $('borrow').value=P.borrow; save(); onChange('mode');};
 $('borrow').onchange=e=>{P.borrow=e.target.value; save(); onChange('borrow');};
 $('pattern').onchange=e=>{P.pattern=e.target.value; arpI=0; save();};
 $('bpm').oninput=e=>{P.bpm=+e.target.value; $('bpmOut').textContent=P.bpm+' bpm'; save();};
-['four','bass','lead'].forEach(k=>$(k).onchange=e=>{P[k]=e.target.checked; save(); onChange(k);});
+['bass','lead'].forEach(k=>$(k).onchange=e=>{P[k]=e.target.checked; save(); onChange(k);});
 $('rev').oninput=e=>{P.rev=+e.target.value; revSend.gain.setTargetAtTime(P.rev,ctx.currentTime,0.03); save();};
 $('vol').oninput=e=>{P.vol=+e.target.value; master.gain.setTargetAtTime(P.vol,ctx.currentTime,0.03); save();};
 $('stop').onclick=()=>{ stopTransport(); stopHeld(); clearShow(); };
@@ -401,7 +406,7 @@ function onChange(k){
   if(k==='oct'){ lastVoicing=null; if(cur){ cur.notes=voicing(cur.ch.pcs); lastVoicing=cur.notes; } }
   if(k==='play'){ stopTransport(); stopHeld(); clearShow(); }
   $('rhythmCtl').style.display=P.play==='rythme'?'':'none';
-  if(['tonic','mode','borrow','four','sec'].includes(k)){ renderPads(); if(marked) markGrille(marked); }
+  if(['tonic','mode','borrow','nb','sec'].includes(k)){ renderPads(); if(marked) markGrille(marked); }
   if(k==='tonic'||k==='mode') renderGrilles();
 }
 
@@ -422,13 +427,13 @@ function makePad(ch,cls,kk){
 function renderPads(){
   const [,l,a]=TONICS[P.tonic], t={l,a}, tp=pcOf(t);
   const hs=scaleOf(t,P.mode), bs=scaleOf(t,P.borrow);
-  const home=hs.map((_,i)=>chordOf(hs,i,P.four,tp)), bor=bs.map((_,i)=>chordOf(bs,i,P.four,tp));
+  const home=hs.map((_,i)=>chordOf(hs,i,P.nb,tp)), bor=bs.map((_,i)=>chordOf(bs,i,P.nb,tp));
   $('homeTitle').textContent='Accords de '+TONICS[P.tonic][0]+' '+MODES[P.mode].n.toLowerCase();
   const hb=$('homePads'), bb=$('borrowPads'); hb.innerHTML=''; bb.innerHTML='';
   homeEls=home.map((ch,i)=>{ const p=makePad(ch,'',i+1); hb.appendChild(p); return p; });
   borEls=bor.map((ch,i)=>{ const p=makePad(ch,'borrow'+(ch.key===home[i].key?' same':''),BORLBL[i]); bb.appendChild(p); return p; });
   const sp=$('secPads'); sp.innerHTML='';
-  secEls=secTargets(t,P.mode).map((d,k)=>{ const p=makePad(secChord(P.sec,t,P.mode,d),'sec',SECLBL[k]); sp.appendChild(p); return p; });
+  secEls=secTargets(t,P.mode).map((d,k)=>{ const p=makePad(secChord(P.sec,t,P.mode,d,P.nb),'sec',SECLBL[k]); sp.appendChild(p); return p; });
   stopHeld(); clearShow();
 }
 
@@ -456,7 +461,7 @@ const GRILLES={
   maj:[
     {n:'Pop',g:['I','V','VIm','IV'],d:'<b>I V VIm IV</b> : la grille de milliers de chansons pop.'},
     {n:'Années 50',g:['I','VIm','IV','V'],d:'<b>I VIm IV V</b> : la grille « doo-wop ».'},
-    {n:'Jazz II V I',g:['IIm','V','I'],d:'<b>IIm V I</b> : la cadence du jazz. Coche « Accords à 4 sons » : IIm7 V7 Imaj7.'},
+    {n:'Jazz II V I',g:['IIm','V','I'],d:'<b>IIm V I</b> : la cadence du jazz. Choisis « 4 sons » : IIm7 V7 Imaj7, ou « 5 sons » : IIm9 V9 Imaj9.'},
     {n:'Dominantes secondaires',g:['I','V7/VI','VIm','V7/II','IIm','V','I'],s:'v',d:'<b>I V7/VI VIm V7/II IIm V I</b> : chaque accord est préparé par sa propre dominante, on avance par quintes. En C : C E7 Am A7 Dm G C.'},
     {n:'Diminué de passage',g:['I','VII°7/II','IIm','V','I'],s:'dim',d:'<b>I VII°7/II IIm V I</b> : l\'accord diminué fait monter la basse par demi-ton vers le IIm. En C : C C♯dim7 Dm G C.'},
     {n:'Substitution tritonique',g:['IIm','SubV7/I','I'],s:'sub',d:'<b>IIm SubV7/I I</b> : le V7 est remplacé par l\'accord de 7e situé un triton plus loin ; la basse descend par demi-tons. En C : Dm D♭7 C, au lieu de Dm G7 C.'},
