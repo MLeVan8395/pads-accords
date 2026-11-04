@@ -20,6 +20,7 @@ L'appli fonctionne ensuite **hors ligne** et se met à jour toute seule.
 |---|---|
 | **Tonalité** | 14 toniques (avec la bonne orthographe : C♯ ou D♭…) et 9 modes : majeur, mineur naturel, harmonique, mélodique, dorien, phrygien, lydien, mixolydien, locrien |
 | **Pads de la tonalité** | Les 7 accords de la gamme, avec leur degré (I, IIm, VIIdim…), en triades ou en accords à 4 sons |
+| **Dominantes secondaires** | Vers chaque accord majeur ou mineur de la tonalité : dominante V7/x, diminuée VII°7/x ou substitution tritonique SubV7/x |
 | **Emprunts** | Les 7 accords d'un autre mode sur la même tonique, avec leur degré (IVm, ♭VII, ♭VI…). Les accords identiques à la tonalité sont grisés (« = ») |
 | **Sons** | Piano électrique, orgue, nappe, synthé pincé ; réverbération et volume |
 | **Jeu** | **Tenu** (tant qu'on appuie), **Maintenu** (jusqu'au pad suivant), **Rythme** (noires, croches, charleston, reggae, arpèges, tempo réglable) |
