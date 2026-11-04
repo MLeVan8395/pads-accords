@@ -113,7 +113,10 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
     </div>
     <div class="row" style="margin-top:10px">
       <div class="field"><span class="lbl">Accords</span><div class="seg" id="nb"></div></div>
-      <label class="chk"><input type="checkbox" id="bass"> Basse (fondamentale)</label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="field"><span class="lbl">Basse</span><select id="bsel" aria-label="Note de basse sous l'accord"></select></div>
+      <label class="chk"><input type="checkbox" id="bass"> Jouer la basse</label>
       <label class="chk"><input type="checkbox" id="lead"> Enchaînement doux</label>
       <div class="field"><span class="lbl">Octave</span><div class="seg" id="oct"></div></div>
       <div class="field">Réverb <input type="range" id="rev" min="0" max="1" step="0.01" aria-label="Réverbération"></div>
@@ -153,6 +156,10 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
     <details class="help"><summary>Comprendre : les accords de la tonalité</summary>
       <p>On construit un accord sur chaque note de la gamme en <b>empilant des tierces</b> (une note sur deux de la gamme). En majeur, on obtient toujours la même suite : <b>I, IIm, IIIm, IV, V, VIm, VIIdim</b>. Avec 4 sons : Imaj7, IIm7, IIIm7, IVmaj7, V7, VIm7, VIIm7♭5. Avec 5 sons (on ajoute la <b>neuvième</b>) : Imaj9, IIm9, IIIm7(11), IVmaj9, V9, VIm9, VIIm7♭5(11). Sur IIIm7 et VIIm7♭5, la neuvième de la gamme serait une ♭9, une note à éviter : on la remplace par la <b>onzième</b>. En <b>mineur mélodique</b>, l'accord m7♭5 prend la <b>9e bécarre</b> (m9♭5).</p>
       <p>Les <b>degrés</b> (chiffres romains) ne changent pas quand on change de tonalité : une grille I V VIm IV donne C G Am F en C, et G D Em C en G. C'est ce qui permet de transposer.</p>
+    </details>
+    <details class="help"><summary>Comprendre : renversements et basses étrangères</summary>
+      <p>Le menu <b>Basse</b> place n'importe quelle note (même hors de la gamme) sous tous les accords. Si cette note fait partie de l'accord, c'est un <b>renversement</b> : C/E (Do Mi Sol avec Mi à la basse), C/G. Sinon, c'est une <b>basse étrangère</b> : F/G (Fa La Do sur Sol, un son « suspendu » très utilisé en pop et en gospel), D/C, et même C/B♭ en Do majeur…</p>
+      <p>Garde la même basse et change d'accord au-dessus : c'est une <b>pédale</b>. Reviens sur « Fondamentale » pour les accords normaux.</p>
     </details>
     <details class="help"><summary>Comprendre : les dominantes secondaires</summary>
       <p>Une <b>dominante secondaire</b> est un accord de 7e (V7) placé juste avant un accord de la tonalité, comme si cet accord était une tonique le temps d'un instant. En C, <b>A7</b> (V7/II) prépare Dm, exactement comme G7 prépare C. Sa tierce (Do♯ dans A7) est la <b>sensible</b> de l'accord visé : elle monte d'un demi-ton vers lui.</p>
@@ -242,10 +249,8 @@ function accSym(a,x,y){
   if(a===2) return `<path d="M${x+1} ${y-3}l6 6M${x+7} ${y-3}l-6 6" stroke="${INK}" stroke-width="2.2"/>`;
   return `<path d="M${x+2} ${y-9}V${y+4}M${x+7} ${y-4}V${y+9}M${x+2} ${y-1}L${x+7} ${y-3}M${x+2} ${y+4}L${x+7} ${y+2}" stroke="${INK}" stroke-width="1.4"/>`;
 }
-function fClef(o,x,yF){ // clé de fa pleine, la tête sur la 4e ligne
-  o.push(`<circle cx="${x+5}" cy="${yF}" r="4.6" fill="${INK}"/>`);
-  o.push(`<path d="M${x+1.5} ${yF-1} C${x+2} ${yF-12} ${x+25} ${yF-15} ${x+30} ${yF+1} C${x+34} ${yF+16} ${x+21} ${yF+29} ${x+1} ${yF+37} C${x+15} ${yF+27} ${x+24} ${yF+15} ${x+22} ${yF+2} C${x+20} ${yF-9} ${x+8} ${yF-9} ${x+5} ${yF-2} Z" fill="${INK}"/>`);
-  o.push(`<circle cx="${x+38}" cy="${yF-5}" r="2.5" fill="${INK}"/><circle cx="${x+38}" cy="${yF+5}" r="2.5" fill="${INK}"/>`);
+function fClef(o,x,yF){ // clé de fa : tête sur la 4e ligne, de la 5e ligne jusqu'à la 2e
+  o.push(`<g transform="translate(${x+4} ${yF})"><circle cx="0" cy="0" r="3.6" fill="${INK}"/><path d="M-3.2 -0.6 C-2.8 -8.6 13.6 -10.6 17.4 0.4 C20 9.6 12.2 18 -2.4 24.2 C7.6 17 13 9 12.2 0.8 C11.4 -5.6 4.6 -6.2 1.8 -1.2 Z" fill="${INK}"/><circle cx="23" cy="-5" r="2.1" fill="${INK}"/><circle cx="23" cy="5" r="2.1" fill="${INK}"/></g>`);
 }
 // accord en rondes sur grand-portée : tre / bas = notes {l,a,o}
 function engraveGrand(tre,bas){
@@ -271,7 +276,7 @@ function ledgers(o,p,y0,base,xa,xb){ for(let q=base-2;q>=p;q-=2){ const yy=y0+4*
 function chordStaff(midis,bassMidi,nn){ const tre=[], bas=[]; midis.forEach(m=>(m>=60?tre:bas).push(spell(m,nn))); if(bassMidi!=null) bas.push(spell(bassMidi,nn)); return engraveGrand(tre,bas); }
 
 /* ================= ÉTAT ================= */
-const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', oct:'z', sound:'ep', play:'tenu', bpm:96, pattern:'croches', nb:'3', bass:true, lead:true, rev:0.25, vol:0.8};
+const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', oct:'z', bn:'', sound:'ep', play:'tenu', bpm:96, pattern:'croches', nb:'3', bass:true, lead:true, rev:0.25, vol:0.8};
 try{ const s=JSON.parse(localStorage.getItem('pads-reglages')||'{}'); if(s.nb==null&&'four' in s) s.nb=s.four?'4':'3'; delete s.four; Object.assign(P,s); }catch(e){}
 const save=()=>{ try{ localStorage.setItem('pads-reglages',JSON.stringify(P)); }catch(e){} };
 
@@ -347,11 +352,12 @@ let held=null;       // accord tenu : {vs, el}
 let cur=null;        // accord courant (mode rythme)
 function show(ch,notes,el){
   const nm=document.getElementById('nowName'); nm.textContent=ch.name; nm.classList.toggle('b',el.classList.contains('borrow')); nm.classList.toggle('s',el.classList.contains('sec'));
-  document.getElementById('nowRn').textContent=ch.roman;
+  document.getElementById('nowRn').textContent=ch.roman+(ch.bassNote?(ch.inv?' · renversement':' · basse étrangère'):'');
   document.getElementById('nowCtx').textContent= ch.sec ? '· '+(ch.sec==='v'?'dominante secondaire':ch.sec==='dim'?'accord diminué de passage':'substitution tritonique')+', se résout sur '+ch.target : el.classList.contains('borrow') && !el.classList.contains('same') ? '· emprunt au mode '+MODES[P.borrow].n.toLowerCase() : '· accord de la tonalité';
   document.getElementById('nowNotes').textContent=ch.fr;
-  lightMini(notes, P.bass?bassOf(ch.pcs[0]):null);
-  $('cstaff').innerHTML=chordStaff(notes, P.bass?bassOf(ch.pcs[0]):null, ch.nn);
+  const bm=hasBass(ch)?bassOf(bassPcOf(ch)):null;
+  lightMini(notes, bm);
+  $('cstaff').innerHTML=chordStaff(notes, bm, ch.bassNote?ch.nn.concat([ch.bassNote]):ch.nn);
   document.querySelectorAll('.pad.lit').forEach(p=>p.classList.remove('lit')); el.classList.add('lit');
 }
 function clearShow(){ document.querySelectorAll('.pad.lit').forEach(p=>p.classList.remove('lit')); lightMini([],null); $('cstaff').innerHTML=chordStaff([],null); }
@@ -362,7 +368,7 @@ function press(el){
   if(P.play==='maintenu' && held && held.el===el){ stopHeld(); clearShow(); return; }
   stopHeld();
   const notes=voicing(ch.pcs); lastVoicing=notes; const t=ctx.currentTime+0.004, S=SOUNDS[P.sound];
-  const vs=notes.map(m=>S.make(m,t,1)); if(P.bass) vs.push(S.make(bassOf(ch.pcs[0]),t,1));
+  const vs=notes.map(m=>S.make(m,t,1)); if(hasBass(ch)) vs.push(S.make(bassOf(bassPcOf(ch)),t,1));
   held={vs,el}; show(ch,notes,el);
 }
 function unpress(el){ if(P.play==='tenu' && held && held.el===el){ stopHeld(); clearShow(); } }
@@ -382,7 +388,7 @@ function schedule(){
   const sd=60/P.bpm/4;
   while(nextT < ctx.currentTime+0.12){
     if(cur){ PATTERNS[P.pattern].f(step,nextT,sd,cur.notes);
-      if(P.bass && step%8===0) hit([bassOf(cur.ch.pcs[0])],nextT,sd*7); }
+      if(hasBass(cur.ch) && step%8===0) hit([bassOf(bassPcOf(cur.ch))],nextT,sd*7); }
     if(step%4===0) beatQ.push({t:nextT,b:step/4});
     step=(step+1)%16; nextT+=sd;
   }
@@ -445,12 +451,20 @@ function renderPads(){
   const home=hs.map((_,i)=>chordOf(hs,i,P.nb,tp)), bor=bs.map((_,i)=>chordOf(bs,i,P.nb,tp));
   $('homeTitle').textContent='Accords de '+TONICS[P.tonic][0]+' '+MODES[P.mode].n.toLowerCase();
   const hb=$('homePads'), bb=$('borrowPads'); hb.innerHTML=''; bb.innerHTML='';
-  homeEls=home.map((ch,i)=>{ const p=makePad(ch,'',i+1); hb.appendChild(p); return p; });
-  borEls=bor.map((ch,i)=>{ const p=makePad(ch,'borrow'+(ch.key===home[i].key?' same':''),BORLBL[i]); bb.appendChild(p); return p; });
+  const same=bor.map((ch,i)=>ch.key===home[i].key);
+  homeEls=home.map((ch,i)=>{ const p=makePad(slash(ch,hs),'',i+1); hb.appendChild(p); return p; });
+  borEls=bor.map((ch,i)=>{ const p=makePad(slash(ch,hs),'borrow'+(same[i]?' same':''),BORLBL[i]); bb.appendChild(p); return p; });
   const sp=$('secPads'); sp.innerHTML='';
-  secEls=secTargets(t,P.mode).map((d,k)=>{ const p=makePad(secChord(P.sec,t,P.mode,d,P.nb),'sec',SECLBL[k]); sp.appendChild(p); return p; });
-  stopHeld(); clearShow();
+  secEls=secTargets(t,P.mode).map((d,k)=>{ const p=makePad(slash(secChord(P.sec,t,P.mode,d,P.nb),hs),'sec',SECLBL[k]); sp.appendChild(p); return p; });
+  renderBassSel(); stopHeld(); clearShow();
 }
+// basse sous l'accord : renversement (note de l'accord) ou basse étrangère
+const BASS_OPTS=[[0,0],[0,1],[1,-1],[1,0],[1,1],[2,-1],[2,0],[3,0],[3,1],[4,-1],[4,0],[4,1],[5,-1],[5,0],[5,1],[6,-1],[6,0]];
+function slash(ch){ if(!P.bn) return ch; const [l,a]=P.bn.split(',').map(Number), bn={l,a}, bp=pcOf(bn); if(bp===ch.pcs[0]) return ch;
+  return Object.assign({},ch,{bassPc:bp, bassNote:bn, inv:ch.pcs.includes(bp), name:ch.name+'/'+nameEN(bn), fr:ch.fr+' / basse '+nameFR(bn)}); }
+const bassPcOf=ch=>ch.bassPc!=null?ch.bassPc:ch.pcs[0];
+const hasBass=ch=>P.bass||ch.bassPc!=null;
+function renderBassSel(){ const s=$('bsel'); if(!s.options.length){ s.add(new Option('Fondamentale','')); BASS_OPTS.forEach(([l,a])=>s.add(new Option(nameFR({l,a}),l+','+a))); s.onchange=()=>{ P.bn=s.value; save(); renderPads(); if(marked) markGrille(marked); }; } s.value=P.bn||''; }
 
 /* clavier d'ordinateur */
 const kdown=new Map();
