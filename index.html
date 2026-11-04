@@ -98,7 +98,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
 #midiMap button{padding:0 6px;margin-left:3px}
 .midilearn-on{outline:2px dashed #7bd389;outline-offset:3px;border-radius:6px;cursor:pointer}
 .midilearn-sel{outline-style:solid;background:rgba(123,211,137,.1)}
-@media (hover:none){.midibar{display:none}}
+.midibar button:disabled{opacity:.55;cursor:default}
 </style>
 </head>
 <body>
@@ -585,7 +585,7 @@ document.getElementById('midiLearn').onclick=()=>{ if(MIDIK.learn){ midiLearnSto
   document.querySelectorAll('input[type=range]').forEach(i=>(i.closest('.slider')||i.parentElement).classList.add('midilearn-on')); document.getElementById('midiHint').textContent='Touche un curseur, puis tourne un bouton du clavier…'; };
 document.addEventListener('pointerdown',e=>{ if(MIDIK.learn!==1) return; const box=e.target.closest('.midilearn-on'); if(!box) return; const i=box.querySelector('input[type=range]')||(box.matches('input')?box:null); if(!i) return;
   e.preventDefault(); e.stopPropagation(); MIDIK.learn=2; MIDIK.learnKey=rangeKey(i); box.classList.add('midilearn-sel'); document.getElementById('midiHint').textContent='« '+rangeLabel(MIDIK.learnKey)+' » : tourne maintenant un bouton ou un fader.'; },true);
-midiRenderMap(); if(MIDIK.on&&navigator.requestMIDIAccess) midiEnable();
+midiRenderMap(); if(!navigator.requestMIDIAccess){ const b=document.getElementById('midiBtn'); b.disabled=true; b.textContent='🎹 MIDI indisponible ici'; document.getElementById('midiStat').textContent='(iPad, iPhone et Safari ne gèrent pas le MIDI : utilise Chrome ou Edge, ou une tablette Android)'; } else if(MIDIK.on) midiEnable();
 </script>
 </body>
 </html>
