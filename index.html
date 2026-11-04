@@ -261,7 +261,7 @@ function engraveGrand(tre,bas){
   o.push(`<path d="M${bx+9} ${top} C${bx-1} ${top+H*.12} ${bx+9} ${top+H*.36} ${bx+1} ${top+H/2} C${bx+9} ${top+H*.64} ${bx-1} ${top+H*.88} ${bx+9} ${top+H} C${bx+3} ${top+H*.86} ${bx+11} ${top+H*.64} ${bx+3} ${top+H/2} C${bx+11} ${top+H*.36} ${bx+3} ${top+H*.14} ${bx+9} ${top} Z" fill="${INK}"/>`);
   o.push(`<line x1="${sx}" y1="${top}" x2="${sx}" y2="${topB+4*SPc}" stroke="${INK}" stroke-width="1.6"/>`);
   [W-10,W-6].forEach((x,i)=>o.push(`<line x1="${x}" y1="${top}" x2="${x}" y2="${topB+4*SPc}" stroke="${INK}" stroke-width="${i?3.5:1}"/>`));
-  o.push(glyph('treble',20,top+3*SPc+1,56)); fClef(o,22,topB+SPc);
+  o.push(glyph('treble',20,top+3*SPc+8,56)); fClef(o,22,topB+SPc); // volute de la clé de Sol sur la ligne du Sol
   const staff=(notes,y0,base)=>{ let prevP=null, prevShift=false; const accCols=[];
     notes.slice().sort((a,b)=>dpos(a)-dpos(b)).forEach(n=>{ const p=dpos(n), y=y0+4*SPc-(p-base)*Hc;
       let shift=false; if(prevP!==null&&p-prevP===1&&!prevShift) shift=true; if(prevP===p) return; prevShift=shift; prevP=p; const x=x0+(shift?14:0);
