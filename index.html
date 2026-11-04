@@ -151,7 +151,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
     <div class="grilles" id="grilles"></div>
     <p class="gdesc" id="gdesc">Choisis une grille : les pads à jouer sont numérotés dans l'ordre.</p>
     <details class="help"><summary>Comprendre : les accords de la tonalité</summary>
-      <p>On construit un accord sur chaque note de la gamme en <b>empilant des tierces</b> (une note sur deux de la gamme). En majeur, on obtient toujours la même suite : <b>I, IIm, IIIm, IV, V, VIm, VIIdim</b>. Avec 4 sons : Imaj7, IIm7, IIIm7, IVmaj7, V7, VIm7, VIIm7♭5. Avec 5 sons (on ajoute la <b>neuvième</b>) : Imaj9, IIm9, IIIm7(♭9), IVmaj9, V9, VIm9, VIIm7♭5(♭9).</p>
+      <p>On construit un accord sur chaque note de la gamme en <b>empilant des tierces</b> (une note sur deux de la gamme). En majeur, on obtient toujours la même suite : <b>I, IIm, IIIm, IV, V, VIm, VIIdim</b>. Avec 4 sons : Imaj7, IIm7, IIIm7, IVmaj7, V7, VIm7, VIIm7♭5. Avec 5 sons (on ajoute la <b>neuvième</b>) : Imaj9, IIm9, IIIm7(11), IVmaj9, V9, VIm9, VIIm7♭5(11). Sur IIIm7 et VIIm7♭5, la neuvième de la gamme serait une ♭9, une note à éviter : on la remplace par la <b>onzième</b>. En <b>mineur mélodique</b>, l'accord m7♭5 prend la <b>9e bécarre</b> (m9♭5).</p>
       <p>Les <b>degrés</b> (chiffres romains) ne changent pas quand on change de tonalité : une grille I V VIm IV donne C G Am F en C, et G D Em C en G. C'est ce qui permet de transposer.</p>
     </details>
     <details class="help"><summary>Comprendre : les dominantes secondaires</summary>
@@ -191,7 +191,7 @@ const MODES={
 };
 const MAJ=[0,2,4,5,7,9,11], ROM=['I','II','III','IV','V','VI','VII'];
 const T3={'4,7':'','3,7':'m','3,6':'dim','4,8':'+'};
-const T5={'4,7,11,2':'maj9','4,7,10,2':'9','3,7,10,2':'m9','3,7,10,1':'m7(♭9)','3,6,10,1':'m7♭5(♭9)','3,6,10,2':'m9♭5','4,7,10,1':'7(♭9)','4,7,10,3':'7(♯9)','3,7,11,2':'m(maj9)','4,8,11,2':'maj9♯5','4,8,10,2':'9♯5','3,6,9,1':'dim7(♭9)','3,6,9,2':'dim7(9)'};
+const T5={'4,7,11,3':'maj7(♯9)','4,7,11,2':'maj9','4,7,10,2':'9','3,7,10,2':'m9','3,7,10,1':'m7(♭9)','3,6,10,1':'m7♭5(♭9)','3,6,10,2':'m9♭5','4,7,10,1':'7(♭9)','4,7,10,3':'7(♯9)','3,7,11,2':'m(maj9)','4,8,11,2':'maj9♯5','4,8,10,2':'9♯5','3,6,9,1':'dim7(♭9)','3,6,9,2':'dim7(9)'};
 const T4={'4,7,11':'maj7','4,7,10':'7','3,7,10':'m7','3,6,10':'m7♭5','3,6,9':'dim7','3,7,11':'m(maj7)','4,8,11':'maj7♯5','4,8,10':'7♯5'};
 const pcOf=n=>((NAT[n.l]+n.a)%12+12)%12;
 const nameEN=n=>LET[n.l]+ACC[n.a], nameFR=n=>FRN[n.l]+ACC[n.a];
@@ -200,7 +200,14 @@ function chordOf(sc,i,nb,tonicPc){
   const n=nb===true?4:(+nb||3);
   const idx=[0,2,4,6,8].slice(0,n), notes=idx.map(k=>sc[(i+k)%7]), rp=pcOf(notes[0]);
   const ints=notes.slice(1).map(n=>(pcOf(n)-rp+12)%12);
-  const s3=T3[ints.slice(0,2).join(',')]??'?', s4=T4[ints.slice(0,3).join(',')]??'?', s=n===3?s3:n===4?s4:(T5[ints.join(',')]??s4+'(9)');
+  let s3=T3[ints.slice(0,2).join(',')]??'?', s4=T4[ints.slice(0,3).join(',')]??'?', s=n===3?s3:n===4?s4:(T5[ints.join(',')]??s4+'(9)');
+  // m7(♭9) et m7♭5(♭9) : la ♭9 est une note à éviter, on la remplace par la 11e
+  // ♭9 à éviter : m7♭5 → 9e bécarre s'il vient du mineur mélodique, 11e sinon ; m7 → 11e ; dim7 → 4 sons
+  const melo=sc.map(x=>(pcOf(x)-pcOf(sc[0])+12)%12).join(',')==='0,2,3,5,7,9,11';
+  if(n===5&&s==='m7♭5(♭9)'&&melo){ const n9=notes[4]; notes[4]={l:n9.l,a:n9.a+1}; ints[3]=2; s='m9♭5'; }
+  else if(n===5&&s==='m7♭5(♭9)'){ const e11=sc[(i+10)%7]; if((pcOf(e11)-rp+12)%12===5){ notes[4]=e11; ints[3]=5; s='m7♭5(11)'; } else { notes.pop(); ints.pop(); s=s4; } }
+  else if(n===5&&s==='m7(♭9)'){ const e11=sc[(i+10)%7]; if((pcOf(e11)-rp+12)%12===5){ notes[4]=e11; ints[3]=5; s='m7(11)'; } else { notes.pop(); ints.pop(); s=s4; } }
+  else if(n===5&&s==='dim7(♭9)'){ notes.pop(); ints.pop(); s=s4; }
   let diff=((rp-tonicPc+12)%12)-MAJ[i]; if(diff>6)diff-=12; if(diff<-6)diff+=12;
   const pre=diff<0?'♭'.repeat(-diff):'♯'.repeat(diff);
   return {nn:notes, name:nameEN(notes[0])+s, roman:pre+ROM[i]+s, tri:pre+ROM[i]+s3, pcs:notes.map(pcOf), fr:notes.map(nameFR).join(' '), key:rp+'|'+ints.join(',')};
