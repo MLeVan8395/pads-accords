@@ -115,6 +115,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
       <label class="chk"><input type="checkbox" id="four"> Accords à 4 sons</label>
       <label class="chk"><input type="checkbox" id="bass"> Basse (fondamentale)</label>
       <label class="chk"><input type="checkbox" id="lead"> Enchaînement doux</label>
+      <div class="field"><span class="lbl">Octave</span><div class="seg" id="oct"></div></div>
       <div class="field">Réverb <input type="range" id="rev" min="0" max="1" step="0.01" aria-label="Réverbération"></div>
       <div class="field">Volume <input type="range" id="vol" min="0" max="1" step="0.01" aria-label="Volume"></div>
     </div>
@@ -251,7 +252,7 @@ function engraveGrand(tre,bas){
 function chordStaff(midis,bassMidi,nn){ const tre=[], bas=[]; midis.forEach(m=>(m>=60?tre:bas).push(spell(m,nn))); if(bassMidi!=null) bas.push(spell(bassMidi,nn)); return engraveGrand(tre,bas); }
 
 /* ================= ÉTAT ================= */
-const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', sound:'ep', play:'tenu', bpm:96, pattern:'croches', four:false, bass:true, lead:true, rev:0.25, vol:0.8};
+const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', oct:'z', sound:'ep', play:'tenu', bpm:96, pattern:'croches', four:false, bass:true, lead:true, rev:0.25, vol:0.8};
 try{ Object.assign(P, JSON.parse(localStorage.getItem('pads-reglages')||'{}')); }catch(e){}
 const save=()=>{ try{ localStorage.setItem('pads-reglages',JSON.stringify(P)); }catch(e){} };
 
@@ -314,10 +315,11 @@ const bassOf=pc=>36+((pc-36)%12+12)%12;
 function stack(pcs,lo){ const v=[lo]; let p=lo; for(let k=1;k<pcs.length;k++){ let m=p+((pcs[k]-p)%12+12)%12; if(m===p)m+=12; v.push(m); p=m; } return v; }
 function dist(a,b){ let s=0; a.forEach(x=>s+=Math.min(...b.map(y=>Math.abs(x-y)))); b.forEach(y=>s+=Math.min(...a.map(x=>Math.abs(x-y)))); return s; }
 function voicing(pcs){
-  if(!P.lead||!lastVoicing){ let lo=48+((pcs[0]-48)%12+12)%12; if(lo<53) lo+=12; return stack(pcs,lo); }
+  const O=12*({m1:-1,z:0,p1:1,p2:2}[P.oct]||0);
+  if(!P.lead||!lastVoicing){ let lo=48+O+((pcs[0]-48)%12+12)%12; if(lo<53+O) lo+=12; return stack(pcs,lo); }
   let best=null, bs=1e9;
   for(let inv=0;inv<pcs.length;inv++){ const rot=pcs.slice(inv).concat(pcs.slice(0,inv));
-    for(let lo=50;lo<=65;lo++){ if(lo%12!==rot[0]) continue; const v=stack(rot,lo), s=dist(v,lastVoicing)+(inv?0.3:0); if(s<bs){bs=s;best=v;} } }
+    for(let lo=50+O;lo<=65+O;lo++){ if(((lo%12)+12)%12!==rot[0]) continue; const v=stack(rot,lo), s=dist(v,lastVoicing)+(inv?0.3:0); if(s<bs){bs=s;best=v;} } }
   return best;
 }
 
@@ -379,6 +381,7 @@ function seg(id,items,key,c){ const box=$(id); box.innerHTML=''; if(c) box.style
     b.onclick=()=>{ P[key]=k; [...box.children].forEach(x=>x.classList.toggle('on',x===b)); save(); onChange(key); }; box.appendChild(b); }); }
 seg('sound',SOUNDS,'sound');
 seg('play',{tenu:{n:'Tenu'},maintenu:{n:'Maintenu'},rythme:{n:'Rythme'}},'play');
+seg('oct',{m1:{n:'−1'},z:{n:'0'},p1:{n:'+1'},p2:{n:'+2'}},'oct');
 const SECSEG={v:{n:'Dominante V7'},dim:{n:'Diminuée VII°7'},sub:{n:'Substitution tritonique'}};
 seg('secmode',SECSEG,'sec','var(--sec)');
 Object.entries(PATTERNS).forEach(([k,p])=>$('pattern').add(new Option(p.n,k)));
@@ -395,6 +398,7 @@ $('vol').oninput=e=>{P.vol=+e.target.value; master.gain.setTargetAtTime(P.vol,ct
 $('stop').onclick=()=>{ stopTransport(); stopHeld(); clearShow(); };
 
 function onChange(k){
+  if(k==='oct'){ lastVoicing=null; if(cur){ cur.notes=voicing(cur.ch.pcs); lastVoicing=cur.notes; } }
   if(k==='play'){ stopTransport(); stopHeld(); clearShow(); }
   $('rhythmCtl').style.display=P.play==='rythme'?'':'none';
   if(['tonic','mode','borrow','four','sec'].includes(k)){ renderPads(); if(marked) markGrille(marked); }
@@ -441,7 +445,7 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{ const el=kdown.get(e.code); if(el){ kdown.delete(e.code); el.classList.remove('down'); unpress(el); } });
 
 /* petit clavier d'affichage */
-const mini=$('mini'), MLO=36, MHI=84, miniKeys={};
+const mini=$('mini'), MLO=36, MHI=96, miniKeys={};
 (function(){ const whites=[]; for(let m=MLO;m<=MHI;m++) if(![1,3,6,8,10].includes(m%12)) whites.push(m); const W=100/whites.length;
   whites.forEach((m,i)=>{ const d=document.createElement('div'); d.className='w'; mini.appendChild(d); miniKeys[m]=d;
     if([0,2,5,7,9].includes(m%12)&&m<MHI){ const k=document.createElement('div'); k.className='k'; k.style.left=`calc(${(i+1)*W}% - ${W*0.3}%)`; k.style.width=W*0.6+'%'; mini.appendChild(k); miniKeys[m+1]=k; } }); })();
