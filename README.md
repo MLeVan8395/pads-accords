@@ -36,6 +36,10 @@ L'appli fonctionne ensuite **hors ligne** et se met à jour toute seule.
 - **Rien à installer.** Une seule page web, sans échantillon sonore : tous les sons sont fabriqués en direct par le navigateur (Web Audio).
 - **Conventions de notation françaises** : notes seules en Do, Ré, Mi… ; accords et tonalités en lettres (C, Fm, B♭7, « en C »).
 
+## Clavier MIDI
+
+Avec Chrome ou Edge (ordinateur) ou Chrome (Android), branche un clavier en USB et touche **🎹 Clavier MIDI** : les touches blanches jouent les accords de la tonalité (Do = I, Ré = II, Mi = III…), selon le mode de jeu choisi. **Apprendre un bouton** relie un potard ou un fader à un curseur (tempo, réverb, volume). Pas disponible sur iPad / iPhone (Apple ne le permet pas).
+
 ## Licences
 
 - **Tout le projet** (code, textes, grilles) : © 2026 Mickael Le Van, **tous droits réservés** (voir [`LICENSE`](LICENSE)). Reproduction, diffusion et usage commercial interdits sans autorisation écrite de l'auteur. Les éléments de tiers cités restent sous leur propre licence.
