@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pads d'accords</title>
-<meta name="description" content="Des pads d'accords pour jouer en live : choisis la tonalité, le mode et le son, et emprunte des accords aux autres modes (échange modal).">
+<meta name="description" content="Des pads d'accords pour jouer en live : choisis la tonalité, le mode et le son, et emprunte des accords aux autres modes (échange intermodal).">
 <meta name="theme-color" content="#121419">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icones/icone-192.png">
@@ -90,7 +90,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
 <header>
   <div>
     <h1>Pads <span>d'accords</span></h1>
-    <p class="lead">Choisis une tonalité et un son, puis joue les accords en touchant les pads. La deuxième rangée emprunte des accords à un autre mode sur la même tonique : c'est l'<b>échange modal</b>.</p>
+    <p class="lead">Choisis une tonalité et un son, puis joue les accords en touchant les pads. La deuxième rangée emprunte des accords à un autre mode sur la même tonique : c'est l'<b>échange intermodal</b>.</p>
   </div>
   <button id="install" hidden>Installer l'appli</button>
 </header>
@@ -142,7 +142,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
       <p>On construit un accord sur chaque note de la gamme en <b>empilant des tierces</b> (une note sur deux de la gamme). En majeur, on obtient toujours la même suite : <b>I, IIm, IIIm, IV, V, VIm, VIIdim</b>. Avec 4 sons : Imaj7, IIm7, IIIm7, IVmaj7, V7, VIm7, VIIm7♭5.</p>
       <p>Les <b>degrés</b> (chiffres romains) ne changent pas quand on change de tonalité : une grille I V VIm IV donne C G Am F en C, et G D Em C en G. C'est ce qui permet de transposer.</p>
     </details>
-    <details class="help"><summary>Comprendre : l'échange modal (emprunt)</summary>
+    <details class="help"><summary>Comprendre : l'échange intermodal (emprunt)</summary>
       <p>On garde la <b>même tonique</b>, mais on va chercher un accord dans un <b>autre mode</b> construit sur cette tonique. En C majeur, on peut emprunter à Do mineur : Fm (IVm), A♭ (♭VI), B♭ (♭VII), E♭ (♭III).</p>
       <p>Chaque emprunt apporte une couleur : le <b>IVm</b> rend le son nostalgique, le <b>♭VII</b> (pris au mixolydien) sonne rock, le <b>♭VI</b> sonne épique. Les degrés avec ♭ se lisent par rapport à la gamme majeure : ♭VII = accord construit une septième mineure au-dessus de la tonique.</p>
       <p>Les pads grisés marqués <b>=</b> donnent le même accord que dans la tonalité : ce ne sont pas des emprunts.</p>

@@ -1,7 +1,7 @@
 {
   "name": "Pads d'accords",
   "short_name": "Pads accords",
-  "description": "Des pads d'accords pour jouer en live : tonalité, modes, 4 sons et échange modal.",
+  "description": "Des pads d'accords pour jouer en live : tonalité, modes, 4 sons et échange intermodal.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

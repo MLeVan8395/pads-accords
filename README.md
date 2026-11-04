@@ -1,6 +1,6 @@
 # Pads d'accords
 
-Des pads d'accords pour **jouer en live** et **comprendre l'harmonie** : on choisit une tonalité, un son, et on joue les accords en touchant les pads. Une deuxième rangée propose les accords d'un autre mode sur la même tonique : c'est l'**échange modal** (emprunt).
+Des pads d'accords pour **jouer en live** et **comprendre l'harmonie** : on choisit une tonalité, un son, et on joue les accords en touchant les pads. Une deuxième rangée propose les accords d'un autre mode sur la même tonique : c'est l'**échange intermodal** (emprunt).
 
 Conçu pour les cours de musiques actuelles et jazz (FM, ateliers, accompagnement).
 
