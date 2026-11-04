@@ -25,7 +25,7 @@ L'appli fonctionne ensuite **hors ligne** et se met à jour toute seule.
 | **Sons** | Piano électrique, orgue, nappe, synthé pincé ; réverbération et volume |
 | **Jeu** | **Tenu** (tant qu'on appuie), **Maintenu** (jusqu'au pad suivant), **Rythme** (noires, croches, charleston, reggae, arpèges, tempo réglable) |
 | **Options** | Basse sur la fondamentale ; **enchaînement doux** : l'appli choisit le renversement le plus proche de l'accord précédent |
-| **Affichage** | Nom de l'accord, degré, notes en solfège (Fa La♭ Do) et petit clavier |
+| **Affichage** | Nom de l'accord, degré, notes en solfège (Fa La♭ Do), accord sur **double portée** (clés de Sol et de Fa) et petit clavier |
 | **Grilles à essayer** | En majeur et en mineur : I V VIm IV, II V I, I IV IVm I, I ♭VII IV I, cadence andalouse, tierce picarde… Les pads à jouer sont numérotés dans l'ordre |
 | **Clavier d'ordinateur** | 1 à 7 pour la tonalité, A Z E R T Y U pour les emprunts, Espace pour arrêter le rythme |
 
