@@ -126,9 +126,10 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
     <div class="row" style="margin-top:10px">
       <div class="field"><span class="lbl">Accords</span><div class="seg" id="nb"></div></div>
       <div class="field"><span class="lbl">Disposition</span><select id="disp" aria-label="Disposition des accords">
-        <option value="fond">Position fermée, état fondamental</option>
-        <option value="renv">Position fermée, renversements (le plus proche)</option>
-        <option value="ouv">Position ouverte à 2 mains</option>
+        <option value="md">Niveau 1 : main droite seule, état fondamental</option>
+        <option value="fond">Niveau 2 : position fermée, état fondamental</option>
+        <option value="renv">Niveau 3 : position fermée, renversements (le plus proche)</option>
+        <option value="ouv">Niveau 4 : position ouverte à 2 mains</option>
       </select></div>
     </div>
     <div class="row" style="margin-top:10px">
@@ -190,9 +191,10 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
     </details>
     <details class="help"><summary>Comprendre : les modes de jeu et les dispositions</summary>
       <p><b>Tenu</b> : l'accord sonne tant que tu gardes le doigt. <b>Maintenu</b> : il sonne jusqu'au pad suivant (touche à nouveau le même pad pour l'arrêter). <b>Rythme</b> : l'accord est rejoué en boucle selon le rythme et le tempo choisis ; change d'accord quand tu veux, il suit la pulsation.</p>
-      <p><b>Position fermée, état fondamental</b> : les notes de l'accord sont serrées (une tierce entre chaque note) et la fondamentale est toujours en bas. Simple à lire, mais la main saute beaucoup d'un accord à l'autre.</p>
-      <p><b>Position fermée, renversements</b> : l'appli choisit le <b>renversement</b> le plus proche de l'accord précédent, comme un pianiste qui bouge le moins possible les doigts. Les notes communes restent en place : c'est l'<b>enchaînement</b> des voix.</p>
-      <p><b>Position ouverte à 2 mains</b> : les notes sont écartées sur plus d'une octave. La <b>main gauche</b> (clé de Fa) joue la fondamentale et la quinte, ou la fondamentale et la septième avec 5 sons ; la <b>main droite</b> (clé de Sol) joue le reste de l'accord, en restant au plus près de l'accord précédent. Avec 3 sons, la main droite joue l'accord complet ; avec 4 sons, la tierce, la quinte et la septième ; avec 5 sons, la tierce, la quinte et la neuvième (ou la onzième). Le son est plus large, comme au piano jazz.</p>
+      <p><b>Niveau 1, main droite seule</b> : l'accord est joué à l'état fondamental, à la main droite uniquement, autour du Do central (tout en clé de Sol). Pas de basse : c'est le niveau pour apprendre à reconnaître et à placer les accords.</p>
+      <p><b>Niveau 2, position fermée, état fondamental</b> : les notes de l'accord sont serrées (une tierce entre chaque note) et la fondamentale est toujours en bas. Simple à lire, mais la main saute beaucoup d'un accord à l'autre.</p>
+      <p><b>Niveau 3, position fermée, renversements</b> : l'appli choisit le <b>renversement</b> le plus proche de l'accord précédent, comme un pianiste qui bouge le moins possible les doigts. Les notes communes restent en place : c'est l'<b>enchaînement</b> des voix.</p>
+      <p><b>Niveau 4, position ouverte à 2 mains</b> : les notes sont écartées sur plus d'une octave. La <b>main gauche</b> (clé de Fa) joue la fondamentale et la quinte, ou la fondamentale et la septième avec 5 sons ; la <b>main droite</b> (clé de Sol) joue le reste de l'accord, en restant au plus près de l'accord précédent. Avec 3 sons, la main droite joue l'accord complet ; avec 4 sons, la tierce, la quinte et la septième ; avec 5 sons, la tierce, la quinte et la neuvième (ou la onzième). Le son est plus large, comme au piano jazz.</p>
     </details>
   </section>
 </main>
@@ -359,6 +361,7 @@ function dist(a,b){ let s=0; a.forEach(x=>s+=Math.min(...b.map(y=>Math.abs(x-y))
 function voicing(pcs){
   const O=12*({m1:-1,z:0,p1:1,p2:2}[P.oct]||0);
   if(P.disp==='ouv') return openVoicing(pcs,O);
+  if(P.disp==='md') return stack(pcs,60+O+((pcs[0]-60-O)%12+12)%12); // main droite seule : fondamentale entre Do3 et Si3
   if(P.disp==='fond'||!lastVoicing){ let lo=48+O+((pcs[0]-48)%12+12)%12; if(lo<53+O) lo+=12; return stack(pcs,lo); }
   let best=null, bs=1e9;
   for(let inv=0;inv<pcs.length;inv++){ const rot=pcs.slice(inv).concat(pcs.slice(0,inv));
@@ -457,6 +460,8 @@ $('vol').oninput=e=>{P.vol=+e.target.value; master.gain.setTargetAtTime(P.vol,ct
 $('stop').onclick=()=>{ stopTransport(); stopHeld(); clearShow(); };
 
 function onChange(k){
+  if(k==='disp'||k==='init'){ const md=P.disp==='md'; $('bsel').disabled=md; $('bass').disabled=md; $('bass').parentElement.style.opacity=md?.45:''; $('bsel').style.opacity=md?.45:''; }
+  if(k==='disp'){ renderPads(); if(marked) markGrille(marked); }
   if(k==='oct'||k==='disp'){ lastVoicing=null; if(cur){ cur.notes=voicing(cur.ch.pcs); lastVoicing=cur.notes; } }
   if(k==='play'){ stopTransport(); stopHeld(); clearShow(); }
   $('rhythmCtl').style.display=P.play==='rythme'?'':'none';
@@ -493,10 +498,10 @@ function renderPads(){
 }
 // basse sous l'accord : renversement (note de l'accord) ou basse étrangère
 const BASS_OPTS=[[0,0],[0,1],[1,-1],[1,0],[1,1],[2,-1],[2,0],[3,0],[3,1],[4,-1],[4,0],[4,1],[5,-1],[5,0],[5,1],[6,-1],[6,0]];
-function slash(ch){ if(!P.bn) return ch; const [l,a]=P.bn.split(',').map(Number), bn={l,a}, bp=pcOf(bn); if(bp===ch.pcs[0]) return ch;
+function slash(ch){ if(!P.bn||P.disp==='md') return ch; const [l,a]=P.bn.split(',').map(Number), bn={l,a}, bp=pcOf(bn); if(bp===ch.pcs[0]) return ch;
   return Object.assign({},ch,{bassPc:bp, bassNote:bn, inv:ch.pcs.includes(bp), name:ch.name+'/'+nameEN(bn), fr:ch.fr+' / basse '+nameFR(bn)}); }
 const bassPcOf=ch=>ch.bassPc!=null?ch.bassPc:ch.pcs[0];
-const hasBass=ch=>P.bass||ch.bassPc!=null;
+const hasBass=ch=>P.disp!=='md'&&(P.bass||ch.bassPc!=null);
 function renderBassSel(){ const s=$('bsel'); if(!s.options.length){ s.add(new Option('Fondamentale','')); BASS_OPTS.forEach(([l,a])=>s.add(new Option(nameFR({l,a}),l+','+a))); s.onchange=()=>{ P.bn=s.value; save(); renderPads(); if(marked) markGrille(marked); }; } s.value=P.bn||''; }
 
 /* clavier d'ordinateur */
