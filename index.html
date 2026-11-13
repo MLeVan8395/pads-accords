@@ -125,11 +125,15 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
     </div>
     <div class="row" style="margin-top:10px">
       <div class="field"><span class="lbl">Accords</span><div class="seg" id="nb"></div></div>
+      <div class="field"><span class="lbl">Disposition</span><select id="disp" aria-label="Disposition des accords">
+        <option value="fond">Position fermée, état fondamental</option>
+        <option value="renv">Position fermée, renversements (le plus proche)</option>
+        <option value="ouv">Position ouverte à 2 mains</option>
+      </select></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div class="field"><span class="lbl">Basse</span><select id="bsel" aria-label="Note de basse sous l'accord"></select></div>
       <label class="chk"><input type="checkbox" id="bass"> Jouer la basse</label>
-      <label class="chk"><input type="checkbox" id="lead"> Enchaînement doux</label>
       <div class="field"><span class="lbl">Octave</span><div class="seg" id="oct"></div></div>
       <div class="field">Réverb <input type="range" id="rev" min="0" max="1" step="0.01" aria-label="Réverbération"></div>
       <div class="field">Volume <input type="range" id="vol" min="0" max="1" step="0.01" aria-label="Volume"></div>
@@ -184,9 +188,11 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
       <p>Chaque emprunt apporte une couleur : le <b>IVm</b> rend le son nostalgique, le <b>♭VII</b> (pris au mixolydien) sonne rock, le <b>♭VI</b> sonne épique. Les degrés avec ♭ se lisent par rapport à la gamme majeure : ♭VII = accord construit une septième mineure au-dessus de la tonique.</p>
       <p>Les pads grisés marqués <b>=</b> donnent le même accord que dans la tonalité : ce ne sont pas des emprunts.</p>
     </details>
-    <details class="help"><summary>Comprendre : les modes de jeu et l'enchaînement doux</summary>
+    <details class="help"><summary>Comprendre : les modes de jeu et les dispositions</summary>
       <p><b>Tenu</b> : l'accord sonne tant que tu gardes le doigt. <b>Maintenu</b> : il sonne jusqu'au pad suivant (touche à nouveau le même pad pour l'arrêter). <b>Rythme</b> : l'accord est rejoué en boucle selon le rythme et le tempo choisis ; change d'accord quand tu veux, il suit la pulsation.</p>
-      <p><b>Enchaînement doux</b> : l'appli choisit le <b>renversement</b> le plus proche de l'accord précédent, comme un pianiste qui bouge le moins possible les doigts. Décoche-le pour entendre tous les accords à l'état fondamental : ça saute beaucoup plus !</p>
+      <p><b>Position fermée, état fondamental</b> : les notes de l'accord sont serrées (une tierce entre chaque note) et la fondamentale est toujours en bas. Simple à lire, mais la main saute beaucoup d'un accord à l'autre.</p>
+      <p><b>Position fermée, renversements</b> : l'appli choisit le <b>renversement</b> le plus proche de l'accord précédent, comme un pianiste qui bouge le moins possible les doigts. Les notes communes restent en place : c'est l'<b>enchaînement</b> des voix.</p>
+      <p><b>Position ouverte à 2 mains</b> : les notes sont écartées sur plus d'une octave. La <b>main gauche</b> (clé de Fa) joue la fondamentale et la quinte, ou la fondamentale et la septième avec 5 sons ; la <b>main droite</b> (clé de Sol) joue le reste de l'accord, en restant au plus près de l'accord précédent. Avec 3 sons, la main droite joue l'accord complet ; avec 4 sons, la tierce, la quinte et la septième ; avec 5 sons, la tierce, la quinte et la neuvième (ou la onzième). Le son est plus large, comme au piano jazz.</p>
     </details>
   </section>
 </main>
@@ -266,7 +272,7 @@ function fClef(o,x,yF){ // clé de fa : tête sur la 4e ligne, de la 5e ligne ju
 }
 // accord en rondes sur grand-portée : tre / bas = notes {l,a,o}
 function engraveGrand(tre,bas){
-  const left=74, colW=74, top=30, gap=7*SPc, W=left+colW+12, topB=top+4*SPc+gap, Ht=topB+4*SPc+30, x0=left+colW/2, o=[];
+  const left=74, colW=74, top=30, gap=7*SPc, W=left+colW+12, topB=top+4*SPc+gap, Ht=topB+4*SPc+50, x0=left+colW/2, o=[];
   const bx=4, sx=16, H=topB+4*SPc-top;
   for(let l=0;l<5;l++){ o.push(`<line x1="${sx}" y1="${top+l*SPc}" x2="${W-6}" y2="${top+l*SPc}" stroke="${INK}"/>`); o.push(`<line x1="${sx}" y1="${topB+l*SPc}" x2="${W-6}" y2="${topB+l*SPc}" stroke="${INK}"/>`); }
   // accolade + barre de système + double barre finale
@@ -285,11 +291,11 @@ function engraveGrand(tre,bas){
 }
 
 function ledgers(o,p,y0,base,xa,xb){ for(let q=base-2;q>=p;q-=2){ const yy=y0+4*SPc-(q-base)*Hc; o.push(`<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="${INK}"/>`); } for(let q=base+10;q<=p;q+=2){ const yy=y0+4*SPc-(q-base)*Hc; o.push(`<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="${INK}"/>`); } }
-function chordStaff(midis,bassMidi,nn){ const tre=[], bas=[]; midis.forEach(m=>(m>=60?tre:bas).push(spell(m,nn))); if(bassMidi!=null) bas.push(spell(bassMidi,nn)); return engraveGrand(tre,bas); }
+function chordStaff(midis,bm,nn){ const tre=[], bas=[]; midis.forEach((m,k)=>((midis.lh!=null?k>=midis.lh:m>=60)?tre:bas).push(spell(m,nn))); if(bm!=null) bas.push(spell(bm,nn)); return engraveGrand(tre,bas); }
 
 /* ================= ÉTAT ================= */
-const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', oct:'z', bn:'', sound:'ep', play:'tenu', bpm:96, pattern:'croches', nb:'3', bass:true, lead:true, rev:0.25, vol:0.8};
-try{ const s=JSON.parse(localStorage.getItem('pads-reglages')||'{}'); if(s.nb==null&&'four' in s) s.nb=s.four?'4':'3'; delete s.four; Object.assign(P,s); }catch(e){}
+const P={tonic:0, mode:'ionien', borrow:'eolien', sec:'v', oct:'z', bn:'', sound:'ep', play:'tenu', bpm:96, pattern:'croches', nb:'3', bass:true, disp:'renv', rev:0.25, vol:0.8};
+try{ const s=JSON.parse(localStorage.getItem('pads-reglages')||'{}'); if(s.nb==null&&'four' in s) s.nb=s.four?'4':'3'; delete s.four; if(s.disp==null&&'lead' in s) s.disp=s.lead?'renv':'fond'; delete s.lead; Object.assign(P,s); }catch(e){}
 const save=()=>{ try{ localStorage.setItem('pads-reglages',JSON.stringify(P)); }catch(e){} };
 
 /* ================= AUDIO ================= */
@@ -352,12 +358,26 @@ function stack(pcs,lo){ const v=[lo]; let p=lo; for(let k=1;k<pcs.length;k++){ l
 function dist(a,b){ let s=0; a.forEach(x=>s+=Math.min(...b.map(y=>Math.abs(x-y)))); b.forEach(y=>s+=Math.min(...a.map(x=>Math.abs(x-y)))); return s; }
 function voicing(pcs){
   const O=12*({m1:-1,z:0,p1:1,p2:2}[P.oct]||0);
-  if(!P.lead||!lastVoicing){ let lo=48+O+((pcs[0]-48)%12+12)%12; if(lo<53+O) lo+=12; return stack(pcs,lo); }
+  if(P.disp==='ouv') return openVoicing(pcs,O);
+  if(P.disp==='fond'||!lastVoicing){ let lo=48+O+((pcs[0]-48)%12+12)%12; if(lo<53+O) lo+=12; return stack(pcs,lo); }
   let best=null, bs=1e9;
   for(let inv=0;inv<pcs.length;inv++){ const rot=pcs.slice(inv).concat(pcs.slice(0,inv));
     for(let lo=50+O;lo<=65+O;lo++){ if(((lo%12)+12)%12!==rot[0]) continue; const v=stack(rot,lo), s=dist(v,lastVoicing)+(inv?0.3:0); if(s<bs){bs=s;best=v;} } }
   return best;
 }
+// position ouverte à 2 mains : main gauche = fondamentale + quinte (5 sons : + septième), main droite = le reste, au plus près de l'accord précédent
+function openVoicing(pcs,O){
+  const n=pcs.length, r=43+O+((pcs[0]-43-O)%12+12)%12;
+  const lt=n>=5?pcs[3]:pcs[2], lh=[r, r+((lt-r)%12+12)%12];
+  const rhPc=n===3?[pcs[0],pcs[1],pcs[2]]:n===4?[pcs[1],pcs[2],pcs[3]]:[pcs[1],pcs[2],pcs[4]];
+  const prev=lastVoicing&&lastVoicing.lh?lastVoicing.slice(lastVoicing.lh):null, min=Math.max(lh[1]+1,55+O);
+  let best=null, bs=1e9;
+  for(let inv=0;inv<(n>=5?1:rhPc.length);inv++){ const rot=rhPc.slice(inv).concat(rhPc.slice(0,inv));
+    for(let lo=min;lo<min+12;lo++){ if(((lo%12)+12)%12!==rot[0]) continue; const v=stack(rot,lo), s=prev?dist(v,prev)+(inv?0.3:0):inv*100+lo; if(s<bs){bs=s;best=v;} } }
+  const v=lh.concat(best); v.lh=2; return v;
+}
+// basse jouée sous l'accord : toujours sous la note la plus grave
+const bassMidi=(ch,notes)=>{ let b=bassOf(bassPcOf(ch)); while(notes&&notes.length&&b>=notes[0]) b-=12; return b; };
 
 /* ================= JEU ================= */
 let held=null;       // accord tenu : {vs, el}
@@ -367,7 +387,7 @@ function show(ch,notes,el){
   document.getElementById('nowRn').textContent=ch.roman+(ch.bassNote?(ch.inv?' · renversement':' · basse étrangère'):'');
   document.getElementById('nowCtx').textContent= ch.sec ? '· '+(ch.sec==='v'?'dominante secondaire':ch.sec==='dim'?'accord diminué de passage':'substitution tritonique')+', se résout sur '+ch.target : el.classList.contains('borrow') && !el.classList.contains('same') ? '· emprunt au mode '+MODES[P.borrow].n.toLowerCase() : '· accord de la tonalité';
   document.getElementById('nowNotes').textContent=ch.fr;
-  const bm=hasBass(ch)?bassOf(bassPcOf(ch)):null;
+  const bm=hasBass(ch)?bassMidi(ch,notes):null;
   lightMini(notes, bm);
   $('cstaff').innerHTML=chordStaff(notes, bm, ch.bassNote?ch.nn.concat([ch.bassNote]):ch.nn);
   document.querySelectorAll('.pad.lit').forEach(p=>p.classList.remove('lit')); el.classList.add('lit');
@@ -380,7 +400,7 @@ function press(el){
   if(P.play==='maintenu' && held && held.el===el){ stopHeld(); clearShow(); return; }
   stopHeld();
   const notes=voicing(ch.pcs); lastVoicing=notes; const t=ctx.currentTime+0.004, S=SOUNDS[P.sound];
-  const vs=notes.map(m=>S.make(m,t,1)); if(hasBass(ch)) vs.push(S.make(bassOf(bassPcOf(ch)),t,1));
+  const vs=notes.map(m=>S.make(m,t,1)); if(hasBass(ch)) vs.push(S.make(bassMidi(ch,notes),t,1));
   held={vs,el}; show(ch,notes,el);
 }
 function unpress(el){ if(P.play==='tenu' && held && held.el===el){ stopHeld(); clearShow(); } }
@@ -400,7 +420,7 @@ function schedule(){
   const sd=60/P.bpm/4;
   while(nextT < ctx.currentTime+0.12){
     if(cur){ PATTERNS[P.pattern].f(step,nextT,sd,cur.notes);
-      if(hasBass(cur.ch) && step%8===0) hit([bassOf(bassPcOf(cur.ch))],nextT,sd*7); }
+      if(hasBass(cur.ch) && step%8===0) hit([bassMidi(cur.ch,cur.notes)],nextT,sd*7); }
     if(step%4===0) beatQ.push({t:nextT,b:step/4});
     step=(step+1)%16; nextT+=sd;
   }
@@ -424,19 +444,20 @@ const SECSEG={v:{n:'Dominante V7'},dim:{n:'Diminuée VII°7'},sub:{n:'Substituti
 seg('secmode',SECSEG,'sec','var(--sec)');
 Object.entries(PATTERNS).forEach(([k,p])=>$('pattern').add(new Option(p.n,k)));
 $('tonic').value=P.tonic; $('mode').value=P.mode; $('borrow').value=P.borrow; $('pattern').value=P.pattern;
-$('bpm').value=P.bpm; $('bpmOut').textContent=P.bpm+' bpm'; $('bass').checked=P.bass; $('lead').checked=P.lead; $('rev').value=P.rev; $('vol').value=P.vol;
+$('bpm').value=P.bpm; $('bpmOut').textContent=P.bpm+' bpm'; $('bass').checked=P.bass; $('disp').value=P.disp; $('rev').value=P.rev; $('vol').value=P.vol;
 $('tonic').onchange=e=>{P.tonic=+e.target.value; save(); onChange('tonic');};
 $('mode').onchange=e=>{P.mode=e.target.value; if(P.borrow===P.mode) P.borrow = P.mode==='ionien'?'eolien':'ionien'; $('borrow').value=P.borrow; save(); onChange('mode');};
 $('borrow').onchange=e=>{P.borrow=e.target.value; save(); onChange('borrow');};
 $('pattern').onchange=e=>{P.pattern=e.target.value; arpI=0; save();};
 $('bpm').oninput=e=>{P.bpm=+e.target.value; $('bpmOut').textContent=P.bpm+' bpm'; save();};
-['bass','lead'].forEach(k=>$(k).onchange=e=>{P[k]=e.target.checked; save(); onChange(k);});
+$('disp').onchange=e=>{P.disp=e.target.value; save(); onChange('disp');};
+['bass'].forEach(k=>$(k).onchange=e=>{P[k]=e.target.checked; save(); onChange(k);});
 $('rev').oninput=e=>{P.rev=+e.target.value; revSend.gain.setTargetAtTime(P.rev,ctx.currentTime,0.03); save();};
 $('vol').oninput=e=>{P.vol=+e.target.value; master.gain.setTargetAtTime(P.vol,ctx.currentTime,0.03); save();};
 $('stop').onclick=()=>{ stopTransport(); stopHeld(); clearShow(); };
 
 function onChange(k){
-  if(k==='oct'){ lastVoicing=null; if(cur){ cur.notes=voicing(cur.ch.pcs); lastVoicing=cur.notes; } }
+  if(k==='oct'||k==='disp'){ lastVoicing=null; if(cur){ cur.notes=voicing(cur.ch.pcs); lastVoicing=cur.notes; } }
   if(k==='play'){ stopTransport(); stopHeld(); clearShow(); }
   $('rhythmCtl').style.display=P.play==='rythme'?'':'none';
   if(['tonic','mode','borrow','nb','sec'].includes(k)){ renderPads(); if(marked) markGrille(marked); }
@@ -491,7 +512,7 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{ const el=kdown.get(e.code); if(el){ kdown.delete(e.code); el.classList.remove('down'); unpress(el); } });
 
 /* petit clavier d'affichage */
-const mini=$('mini'), MLO=36, MHI=96, miniKeys={};
+const mini=$('mini'), MLO=28, MHI=96, miniKeys={};
 (function(){ const whites=[]; for(let m=MLO;m<=MHI;m++) if(![1,3,6,8,10].includes(m%12)) whites.push(m); const W=100/whites.length;
   whites.forEach((m,i)=>{ const d=document.createElement('div'); d.className='w'; mini.appendChild(d); miniKeys[m]=d;
     if([0,2,5,7,9].includes(m%12)&&m<MHI){ const k=document.createElement('div'); k.className='k'; k.style.left=`calc(${(i+1)*W}% - ${W*0.3}%)`; k.style.width=W*0.6+'%'; mini.appendChild(k); miniKeys[m+1]=k; } }); })();
