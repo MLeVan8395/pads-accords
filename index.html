@@ -85,6 +85,10 @@ details.help{border-top:1px dashed var(--line);margin-top:10px;padding-top:8px}
 details.help summary{cursor:pointer;color:var(--home);font-size:14px;font-weight:500}
 details.help p,details.help li{font-size:14px;line-height:1.5;color:#cfd3da}
 details.help b{color:var(--text)}
+.corresp{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 0;font-size:14px}
+.corresp span:not(.lbl){background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px 8px}
+.corresp b{color:var(--home);font-family:var(--mono);margin-right:4px}
+.corresp .cx{color:var(--muted);font-size:13px}
 .startnote{background:var(--home);color:#121419;border-radius:8px;padding:5px 10px;font-weight:600;font-size:13px}
 footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);font-size:12px}
 @media (hover:none){.pad .kk,.kbhint{display:none}}
@@ -106,6 +110,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
   <div>
     <h1>Pads <span>d'accords</span></h1>
     <p class="lead">Choisis une tonalité et un son, puis joue les accords en touchant les pads. Sous les accords de la tonalité : les <b>dominantes secondaires</b> (V7, diminuée ou substitution tritonique), puis les accords empruntés à un autre mode sur la même tonique : c'est l'<b>échange intermodal</b>.</p>
+    <p class="corresp" aria-label="Correspondance entre lettres et notes"><span class="lbl">Rappel</span><span><b>C</b> Do</span><span><b>D</b> Ré</span><span><b>E</b> Mi</span><span><b>F</b> Fa</span><span><b>G</b> Sol</span><span><b>A</b> La</span><span><b>B</b> Si</span><span class="cx">♯ dièse · ♭ bémol · m mineur</span></p>
   </div>
   <button id="install" hidden>Installer l'appli</button>
 </header>
