@@ -94,7 +94,35 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
 @media (hover:none){.pad .kk,.kbhint{display:none}}
 
 /* pas de menu contextuel ni de sélection sur les zones de jeu (appui long) */
-.pads, .pad{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.pads, .pad, .gcells, .gcell{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* ma grille */
+.gtools{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:6px 0 10px}
+.btn.on{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.gcells{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+@media (max-width:900px){.gcells{grid-template-columns:repeat(4,1fr)}}
+.gcell{--c:var(--home);position:relative;min-height:84px;border:1px dashed var(--line);border-radius:12px;background:var(--panel2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;touch-action:none;cursor:pointer;padding:16px 4px 6px;text-align:center}
+.gcell .mn{position:absolute;top:4px;left:8px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.gcell .cn{font-size:clamp(16px,2.3vw,22px);font-weight:700;color:var(--c)}
+.gcell .rn{font-family:var(--mono);font-size:11px;color:var(--c)}
+.gcell .rn.out{color:var(--muted)}
+.gcell .was{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.gcell .hintdrop{color:var(--muted);font-size:12px}
+.gcell.full{border-style:solid;border-color:color-mix(in srgb,var(--c) 45%,var(--line));background:linear-gradient(160deg,color-mix(in srgb,var(--c) 14%,var(--panel2)),var(--panel2));cursor:grab}
+.gcell.borrow{--c:var(--borrow)} .gcell.sec{--c:var(--sec)}
+.gcell .x{position:absolute;top:1px;right:3px;background:none;border:0;color:var(--muted);font-size:16px;line-height:1;cursor:pointer;padding:3px 5px}
+.gcell .x:hover{color:var(--text)}
+.gcell.gadd{color:var(--muted);font-size:20px;border-style:dashed}
+.gcell.over{outline:2px solid var(--ok);outline-offset:2px}
+.gcell.cursor{box-shadow:0 0 0 2px var(--ok) inset}
+.gcell.play{background:color-mix(in srgb,var(--ok) 28%,var(--panel2))}
+.gcell.dragsrc{opacity:.35}
+.dragghost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-70%);background:var(--panel2);border:2px solid var(--c,var(--home));color:var(--c,var(--home));border-radius:12px;padding:8px 14px;font-weight:700;font-size:20px;box-shadow:0 8px 24px rgba(0,0,0,.55);white-space:nowrap}
+.dragghost.del{border-color:#ff6b6b;color:#ff6b6b}
+body.dragging, body.dragging *{cursor:grabbing!important}
+.mididrag{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--ok) 14%,var(--panel2));border:1px solid var(--ok);color:var(--ok);border-radius:9px;padding:7px 12px;font-size:14px;font-weight:600;cursor:grab;user-select:none;-webkit-user-select:none}
+@media (hover:none){.mididrag{display:none}}
+.ghint{color:var(--muted);font-size:13px}
 
 .midibar{max-width:1240px;margin:6px auto 0;padding:0 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px;color:var(--muted)}
 .midibar button{background:var(--panel2,#22262f);border:1px solid var(--line,#2e333e);color:var(--text,#ece9e2);border-radius:8px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
@@ -169,6 +197,30 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 24px;color:var(--muted);fon
       <span class="hint">« = » : même accord que dans la tonalité</span>
     </div>
     <div class="pads" id="borrowPads"></div>
+  </section>
+
+  <section class="panel" id="gpanel">
+    <div class="padhead"><h2 style="color:var(--ok)">Ma grille</h2><span class="hint">Fais glisser un pad dans une mesure. Glisse une mesure sur une autre pour les échanger, ou hors de la grille pour l'effacer.</span></div>
+    <div class="gtools">
+      <button class="btn" id="gPlay" type="button">▶ Jouer la grille</button>
+      <select id="gPattern" aria-label="Rythme de la grille"></select>
+      <input type="range" id="gBpm" min="50" max="180" step="1" aria-label="Tempo de la grille"><output id="gBpmOut"></output>
+      <button class="btn" id="gWrite" type="button" aria-pressed="false">✎ Écrire</button>
+      <span class="field"><span class="lbl">Mesures</span><button class="btn" id="gLess" type="button" aria-label="Une mesure de moins">−</button><output id="gCount" style="min-width:22px;text-align:center"></output><button class="btn" id="gMore" type="button" aria-label="Une mesure de plus">+</button></span>
+      <button class="btn" id="gClear" type="button">Effacer la grille</button>
+    </div>
+    <div class="gcells" id="gcells" aria-label="Ma grille d'accords"></div>
+    <div class="gtools" style="margin-top:12px;margin-bottom:0">
+      <span class="mididrag" id="gDrag" draggable="true" title="Fais glisser ce bouton sur une piste de Cubase ou de Reason">⇩ Glisser la grille vers Cubase / Reason</span>
+      <button class="btn" id="gSave" type="button">Télécharger le fichier MIDI</button>
+      <span class="ghint" id="gMidiHint">Fichier MIDI : une mesure par accord, au tempo choisi, avec la disposition et la basse réglées en haut.</span>
+    </div>
+    <details class="help"><summary>Comprendre : ma grille</summary>
+      <p>Chaque case garde l'<b>accord réel</b> que tu y as déposé : son nom, ses notes, sa basse et son nombre de sons. Si tu changes de tonalité, <b>C reste C</b>. La case affiche alors son <b>nouveau degré</b> : C est I en C, mais IV en G et ♭VI en Em. Le degré d'origine reste écrit en dessous. Si l'accord n'existe pas dans la nouvelle tonalité, la case l'indique (« hors de G ») : c'est peut-être un emprunt ou une dominante secondaire à découvrir.</p>
+      <p>Pour <b>transposer</b> toute une grille, c'est l'inverse : il faut garder les degrés et changer les accords. Compare les deux !</p>
+      <p><b>✎ Écrire</b> : touche une case (elle s'entoure de vert), puis joue les pads à l'écran, au clavier d'ordinateur ou au clavier MIDI : chaque accord joué remplit la case et passe à la suivante.</p>
+      <p><b>Vers Cubase ou Reason</b> (Chrome ou Edge sur ordinateur) : fais glisser le bouton vert sur une piste d'instrument. Si ton logiciel refuse, glisse-le d'abord sur le bureau, puis du bureau vers la piste, ou utilise « Télécharger le fichier MIDI ».</p>
+    </details>
   </section>
 
   <section class="panel">
@@ -393,7 +445,7 @@ let cur=null;        // accord courant (mode rythme)
 function show(ch,notes,el){
   const nm=document.getElementById('nowName'); nm.textContent=ch.name; nm.classList.toggle('b',el.classList.contains('borrow')); nm.classList.toggle('s',el.classList.contains('sec'));
   document.getElementById('nowRn').textContent=ch.roman+(ch.bassNote?(ch.inv?' · renversement':' · basse étrangère'):'');
-  document.getElementById('nowCtx').textContent= ch.sec ? '· '+(ch.sec==='v'?'dominante secondaire':ch.sec==='dim'?'accord diminué de passage':'substitution tritonique')+', se résout sur '+ch.target : el.classList.contains('borrow') && !el.classList.contains('same') ? '· emprunt au mode '+MODES[P.borrow].n.toLowerCase() : '· accord de la tonalité';
+  document.getElementById('nowCtx').textContent= el._ctx || ctxText(ch,el);
   document.getElementById('nowNotes').textContent=ch.fr;
   const bm=hasBass(ch)?bassMidi(ch,notes):null;
   lightMini(notes, bm);
@@ -403,7 +455,8 @@ function show(ch,notes,el){
 function clearShow(){ document.querySelectorAll('.pad.lit').forEach(p=>p.classList.remove('lit')); lightMini([],null); $('cstaff').innerHTML=chordStaff([],null); }
 function stopHeld(){ if(held){ const t=ctx.currentTime; held.vs.forEach(v=>v.release(t)); held=null; } }
 function press(el){
-  startAudio(); const ch=el._ch;
+  startAudio(); const ch=el._ch; el._prevCur=cur; el._wasRunning=running;
+  if(GR.write && !el._fake) gridWrite(el); else GR.lastWrite=null;
   if(P.play==='rythme'){ const notes=voicing(ch.pcs); lastVoicing=notes; cur={ch,notes,el}; show(ch,notes,el); if(!running) startTransport(); return; }
   if(P.play==='maintenu' && held && held.el===el){ stopHeld(); clearShow(); return; }
   stopHeld();
@@ -427,6 +480,7 @@ function hit(ms,t,dur,v=1){ const S=SOUNDS[P.sound]; ms.forEach(m=>S.make(m,t,v)
 function schedule(){
   const sd=60/P.bpm/4;
   while(nextT < ctx.currentTime+0.12){
+    if(gridPlaying && step===0) gridStep();
     if(cur){ PATTERNS[P.pattern].f(step,nextT,sd,cur.notes);
       if(hasBass(cur.ch) && step%8===0) hit([bassMidi(cur.ch,cur.notes)],nextT,sd*7); }
     if(step%4===0) beatQ.push({t:nextT,b:step/4});
@@ -434,7 +488,7 @@ function schedule(){
   }
 }
 function startTransport(){ running=true; step=0; arpI=0; nextT=ctx.currentTime+0.03; schedule(); timer=setInterval(schedule,25); }
-function stopTransport(){ running=false; clearInterval(timer); cur=null; beatQ.length=0; document.querySelectorAll('#beat i').forEach(i=>i.classList.remove('on')); clearShow(); }
+function stopTransport(){ if(gridPlaying){ gridPlaying=false; gridQ.length=0; $('gPlay').textContent='▶ Jouer la grille'; $('gPlay').classList.remove('on'); document.querySelectorAll('.gcell.play').forEach(x=>x.classList.remove('play')); } running=false; clearInterval(timer); cur=null; beatQ.length=0; document.querySelectorAll('#beat i').forEach(i=>i.classList.remove('on')); clearShow(); }
 (function beatLoop(){ while(beatQ.length && beatQ[0].t<=ctx.currentTime){ const b=beatQ.shift().b; document.querySelectorAll('#beat i').forEach((i,k)=>i.classList.toggle('on',k===b)); } requestAnimationFrame(beatLoop); })();
 
 /* ================= INTERFACE ================= */
@@ -480,6 +534,7 @@ function makePad(ch,cls,kk){
   const b=document.createElement('button'); b.className='pad '+cls; b._ch=ch;
   if(ch.name.length>5) b.classList.add('dim7');
   b.innerHTML=`<span class="kk">${kk}</span><span class="rn">${ch.roman}</span><span class="cn">${ch.name}</span>`;
+  padDragHooks(b);
   b.addEventListener('pointerdown',e=>{ e.preventDefault(); try{b.setPointerCapture(e.pointerId)}catch(_){} b.classList.add('down'); press(b); });
   const up=()=>{ b.classList.remove('down'); unpress(b); };
   b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up);
@@ -500,6 +555,7 @@ function renderPads(){
   const sp=$('secPads'); sp.innerHTML='';
   secEls=secTargets(t,P.mode).map((d,k)=>{ const p=makePad(slash(secChord(P.sec,t,P.mode,d,P.nb),hs),'sec',SECLBL[k]); sp.appendChild(p); return p; });
   renderBassSel(); stopHeld(); clearShow();
+  if(typeof renderGrid==='function' && $('gcells')) renderGrid();
 }
 // basse sous l'accord : renversement (note de l'accord) ou basse étrangère
 const BASS_OPTS=[[0,0],[0,1],[1,-1],[1,0],[1,1],[2,-1],[2,0],[3,0],[3,1],[4,-1],[4,0],[4,1],[5,-1],[5,0],[5,1],[6,-1],[6,0]];
@@ -559,6 +615,7 @@ function renderGrilles(){
       if(gr.s && gr.s!==P.sec){ P.sec=gr.s; save(); seg('secmode',SECSEG,'sec','var(--sec)'); renderPads(); }
       [...box.children].forEach(x=>x.classList.toggle('on',x===b)); markGrille(gr); $('gdesc').innerHTML=gr.d; };
     box.appendChild(b); });
+  const cp=document.createElement('button'); cp.className='btn'; cp.textContent='→ Copier dans ma grille'; cp.onclick=()=>{ if(marked) copyGrille(marked); else $('gdesc').textContent='Choisis d\'abord une grille, puis copie-la dans ta grille.'; }; box.appendChild(cp);
   const c=document.createElement('button'); c.className='btn'; c.textContent='Effacer'; c.onclick=()=>{ marked=null; document.querySelectorAll('.pad .ord').forEach(o=>o.remove()); $('gdesc').textContent='Choisis une grille : les pads à jouer sont numérotés dans l\'ordre.'; }; box.appendChild(c);
   $('gdesc').textContent='Choisis une grille : les pads à jouer sont numérotés dans l\'ordre.'; marked=null;
 }
@@ -569,6 +626,189 @@ function markGrille(gr){
     if(el){ if(!ord.has(el)) ord.set(el,[]); ord.get(el).push(k+1); } });
   ord.forEach((ks,el)=>{ const s=document.createElement('span'); s.className='ord'; s.textContent=ks.join('·'); el.appendChild(s); });
 }
+
+/* ================= MA GRILLE (glisser-déposer) ================= */
+// Une case garde l'accord RÉEL (nom, notes, basse, nombre de sons) : changer de tonalité ne le modifie pas.
+const GR={cells:Array(8).fill(null), cursor:0, write:false, max:32};
+try{ const s=JSON.parse(localStorage.getItem('pads-grille')||'null'); if(s&&Array.isArray(s.cells)&&s.cells.length) GR.cells=s.cells.slice(0,GR.max); }catch(e){}
+const gStore=()=>{ try{ localStorage.setItem('pads-grille',JSON.stringify({cells:GR.cells})); }catch(e){} };
+const shortKey=()=>{ const t=TONICS[P.tonic][0]; return P.mode==='ionien'?t:P.mode==='eolien'?t+'m':t+' '+MODES[P.mode].n.toLowerCase(); };
+const sigOf=ch=>ch.pcs.join(',')+'/'+(ch.bassPc??'');
+function ctxText(ch,el){
+  return ch.sec ? '· '+(ch.sec==='v'?'dominante secondaire':ch.sec==='dim'?'accord diminué de passage':'substitution tritonique')+', se résout sur '+ch.target
+    : el.classList.contains('borrow') && !el.classList.contains('same') ? '· emprunt au mode '+MODES[P.borrow].n.toLowerCase() : '· accord de la tonalité';
+}
+function cellFromPad(el){
+  const ch=el._ch, cls=el.classList.contains('sec')?'sec':(el.classList.contains('borrow')&&!el.classList.contains('same'))?'borrow':'home';
+  return {nn:ch.nn, pcs:ch.pcs, name:ch.name, roman:ch.roman, fr:ch.fr, bassPc:ch.bassPc??null, bassNote:ch.bassNote||null, inv:!!ch.inv,
+          sec:ch.sec||null, target:ch.target||null, cls, key0:shortKey(), ctx:ctxText(ch,el).replace(/^· /,'')+' en '+shortKey()};
+}
+const chFromCell=c=>({nn:c.nn, pcs:c.pcs, name:c.name, roman:c.roman, fr:c.fr, bassPc:c.bassPc??undefined, bassNote:c.bassNote||undefined, inv:c.inv, sec:c.sec, target:c.target});
+function fakePad(c){ const f=document.createElement('button'); f.className='pad'+(c.cls==='home'?'':' '+c.cls); f._ch=chFromCell(c); f._ctx='· '+c.ctx; f._fake=true; return f; }
+// degré de l'accord dans la tonalité actuelle, s'il y figure
+function degreeNow(c){
+  const s=c.pcs.join(',')+'/'+(c.bassPc??'');
+  for(const [els,cls] of [[homeEls,'home'],[secEls,'sec'],[borEls,'borrow']]){
+    const el=els.find(p=>sigOf(p._ch)===s && !(cls==='borrow'&&p.classList.contains('same'))); if(el) return {roman:el._ch.roman, cls};
+  }
+  return null;
+}
+
+function renderGrid(){
+  const box=$('gcells'); box.innerHTML='';
+  GR.cells.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='gcell'; d.dataset.i=i;
+    let h=`<span class="mn">${i+1}</span>`;
+    if(c){ const now=degreeNow(c), here=c.key0===shortKey();
+      d.classList.add('full'); if((now?now.cls:c.cls)!=='home') d.classList.add(now?now.cls:c.cls);
+      h+=`<span class="cn">${c.name}</span>`;
+      if(here) h+=`<span class="rn">${c.roman}</span>`;
+      else if(now) h+=`<span class="rn">${now.roman} en ${shortKey()}</span><span class="was">${c.roman} en ${c.key0}</span>`;
+      else h+=`<span class="rn out">hors de ${shortKey()}</span><span class="was">${c.roman} en ${c.key0}</span>`;
+      h+=`<button class="x" type="button" aria-label="Effacer la mesure ${i+1}">×</button>`;
+    } else h+=`<span class="hintdrop">${i===0&&GR.cells.every(x=>!x)?'glisse un pad ici':''}</span>`;
+    d.innerHTML=h; if(GR.write&&i===GR.cursor) d.classList.add('cursor');
+    box.appendChild(d);
+  });
+  if(GR.cells.length<GR.max){ const a=document.createElement('div'); a.className='gcell gadd'; a.innerHTML='<span>＋</span><span class="hintdrop">mesure</span>'; box.appendChild(a); }
+  $('gCount').textContent=GR.cells.length;
+}
+function setCells(cells){ GR.cells=cells; if(GR.cursor>=GR.cells.length) GR.cursor=GR.cells.length-1; gStore(); renderGrid(); }
+
+/* --- glisser-déposer (souris, doigt ou stylet) --- */
+const DR={src:null, ghost:null, x:0, y:0, raf:0};
+function dragStart(src,x,y){
+  DR.src=src; const g=document.createElement('div'); g.className='dragghost'; g.textContent=src.cell.name;
+  g.style.setProperty('--c',`var(--${src.cell.cls==='home'?'home':src.cell.cls})`); document.body.appendChild(g); DR.ghost=g;
+  document.body.classList.add('dragging');
+  if(src.kind==='cell'){ const el=$('gcells').querySelector(`[data-i="${src.i}"]`); if(el) el.classList.add('dragsrc'); }
+  dragMove(x,y); DR.raf=requestAnimationFrame(autoScroll);
+}
+function targetAt(x,y){ const el=document.elementFromPoint(x,y); return { cell: el&&el.closest('.gcell'), inGrid: !!(el&&el.closest('#gpanel')) }; }
+function dragMove(x,y){
+  DR.x=x; DR.y=y; DR.ghost.style.left=x+'px'; DR.ghost.style.top=y+'px';
+  const t=targetAt(x,y); document.querySelectorAll('.gcell.over').forEach(c=>c.classList.remove('over')); if(t.cell) t.cell.classList.add('over');
+  const del=DR.src.kind==='cell'&&!t.inGrid; DR.ghost.classList.toggle('del',del); DR.ghost.textContent=(del?'🗑 ':'')+DR.src.cell.name;
+}
+function autoScroll(){ if(!DR.src) return; const m=70; if(DR.y<m) window.scrollBy(0,-14); else if(DR.y>window.innerHeight-m) window.scrollBy(0,14); DR.raf=requestAnimationFrame(autoScroll); }
+function dragEnd(x,y,cancel){
+  const src=DR.src; if(!src) return; const t=cancel?{cell:null,inGrid:true}:targetAt(x,y);
+  cancelAnimationFrame(DR.raf); DR.ghost.remove(); DR.ghost=null; DR.src=null; document.body.classList.remove('dragging');
+  const cells=GR.cells.slice();
+  if(t.cell&&t.cell.classList.contains('gadd')){ if(cells.length<GR.max){ cells.push(src.cell); if(src.kind==='cell') cells[src.i]=null; } }
+  else if(t.cell){ const j=+t.cell.dataset.i; if(src.kind==='pad') cells[j]=src.cell; else if(j!==src.i){ const tmp=cells[j]; cells[j]=cells[src.i]; cells[src.i]=tmp; } }
+  else if(src.kind==='cell'&&!t.inGrid) cells[src.i]=null;
+  setCells(cells);
+}
+function cancelPress(b){ // le doigt a bougé : ce n'était pas un appui pour jouer, mais un glisser
+  b.classList.remove('down');
+  if(P.play==='rythme'){ if(b._wasRunning) cur=b._prevCur; else stopTransport(); }
+  else if(held&&held.el===b){ stopHeld(); clearShow(); }
+  if(GR.lastWrite&&GR.lastWrite.el===b){ GR.cells[GR.lastWrite.i]=GR.lastWrite.prev; GR.cursor=GR.lastWrite.i; GR.lastWrite=null; gStore(); renderGrid(); }
+}
+function padDragHooks(b){
+  b.addEventListener('pointerdown',e=>{ b._st={x:e.clientX,y:e.clientY}; },true);
+  b.addEventListener('pointermove',e=>{
+    if(DR.src){ dragMove(e.clientX,e.clientY); return; }
+    if(b._st&&Math.hypot(e.clientX-b._st.x,e.clientY-b._st.y)>12){ b._st=null; cancelPress(b); dragStart({kind:'pad',cell:cellFromPad(b)},e.clientX,e.clientY); }
+  });
+  const end=e=>{ b._st=null; if(DR.src){ dragEnd(e.clientX,e.clientY,e.type==='pointercancel'); e.stopImmediatePropagation(); } };
+  b.addEventListener('pointerup',end,true); b.addEventListener('pointercancel',end,true);
+}
+
+/* --- cases de la grille : écouter, déplacer, effacer, choisir la case à écrire --- */
+let gPrev=null;
+const gcells=$('gcells');
+gcells.addEventListener('pointerdown',e=>{
+  const d=e.target.closest('.gcell'); if(!d||e.target.closest('.x')) return; e.preventDefault();
+  if(d.classList.contains('gadd')){ if(GR.cells.length<GR.max){ setCells(GR.cells.concat([null])); } return; }
+  const i=+d.dataset.i, c=GR.cells[i]; try{ d.setPointerCapture(e.pointerId); }catch(_){}
+  gPrev={i,x:e.clientX,y:e.clientY,d,playing:false};
+  if(!c||GR.write){ GR.cursor=i; if(!GR.write) toggleWrite(true); else renderGrid(); gPrev=c?gPrev:null; return; }
+  if(!gridPlaying){ startAudio(); stopHeld(); const f=fakePad(c), notes=voicing(f._ch.pcs); lastVoicing=notes; const t=ctx.currentTime+0.004, S=SOUNDS[P.sound];
+    const vs=notes.map(m=>S.make(m,t,1)); if(hasBass(f._ch)) vs.push(S.make(bassMidi(f._ch,notes),t,1)); held={vs,el:f}; show(f._ch,notes,f); gPrev.playing=true; }
+});
+gcells.addEventListener('pointermove',e=>{
+  if(DR.src){ dragMove(e.clientX,e.clientY); return; }
+  if(gPrev&&GR.cells[gPrev.i]&&Math.hypot(e.clientX-gPrev.x,e.clientY-gPrev.y)>10){ if(gPrev.playing){ stopHeld(); clearShow(); } const i=gPrev.i; gPrev=null; dragStart({kind:'cell',i,cell:GR.cells[i]},e.clientX,e.clientY); }
+});
+const gUp=e=>{ if(DR.src){ dragEnd(e.clientX,e.clientY,e.type==='pointercancel'); return; } if(gPrev&&gPrev.playing){ stopHeld(); clearShow(); } gPrev=null; };
+gcells.addEventListener('pointerup',gUp); gcells.addEventListener('pointercancel',gUp);
+gcells.addEventListener('click',e=>{ const x=e.target.closest('.x'); if(!x) return; const i=+x.closest('.gcell').dataset.i; const cells=GR.cells.slice(); cells[i]=null; setCells(cells); });
+
+/* --- mode écriture : les pads joués (écran, clavier, MIDI) remplissent la grille case par case --- */
+function toggleWrite(on){ GR.write=on; $('gWrite').classList.toggle('on',on); $('gWrite').setAttribute('aria-pressed',on); renderGrid(); }
+$('gWrite').onclick=()=>{ if(!GR.write){ const f=GR.cells.findIndex(c=>!c); GR.cursor=f>=0?f:0; } toggleWrite(!GR.write); };
+function gridWrite(el){
+  const i=GR.cursor; GR.lastWrite={el,i,prev:GR.cells[i]}; const cells=GR.cells.slice(); cells[i]=cellFromPad(el);
+  if(i+1>=cells.length && cells.length<GR.max) cells.push(null);
+  GR.cursor=Math.min(i+1,cells.length-1); setCells(cells);
+}
+
+/* --- nombre de mesures, effacer, copier une grille à essayer --- */
+$('gLess').onclick=()=>{ if(GR.cells.length>1) setCells(GR.cells.slice(0,-1)); };
+$('gMore').onclick=()=>{ if(GR.cells.length<GR.max) setCells(GR.cells.concat([null])); };
+$('gClear').onclick=()=>{ if(GR.cells.some(c=>c)&&!confirm('Effacer toute la grille ?')) return; GR.cursor=0; setCells(Array(8).fill(null)); };
+function copyGrille(gr){
+  const cells=gr.g.map(tok=>{ let el=homeEls.find(p=>p._ch.tri===tok); if(!el) el=secEls.find(p=>p._ch.tri===tok); if(!el) el=borEls.find(p=>p._ch.tri===tok&&!p.classList.contains('same')); return el?cellFromPad(el):null; });
+  while(cells.length<4) cells.push(null); GR.cursor=0; setCells(cells); $('gpanel').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* --- jouer la grille en boucle (rythme et tempo partagés avec le mode Rythme) --- */
+let gridPlaying=false, gridPos=-1; const gridQ=[];
+Object.entries(PATTERNS).forEach(([k,p])=>$('gPattern').add(new Option(p.n,k)));
+const syncTempo=()=>{ $('gPattern').value=P.pattern; $('pattern').value=P.pattern; $('gBpm').value=P.bpm; $('bpm').value=P.bpm; $('gBpmOut').textContent=$('bpmOut').textContent=P.bpm+' bpm'; };
+$('gPattern').onchange=e=>{ P.pattern=e.target.value; arpI=0; save(); syncTempo(); };
+$('gBpm').oninput=e=>{ P.bpm=+e.target.value; save(); syncTempo(); };
+$('pattern').addEventListener('change',syncTempo); $('bpm').addEventListener('input',syncTempo); syncTempo();
+function gridStep(){ // appelé au début de chaque mesure
+  gridPos=(gridPos+1)%GR.cells.length; const c=GR.cells[gridPos];
+  if(c){ const f=fakePad(c), notes=voicing(f._ch.pcs); lastVoicing=notes; cur={ch:f._ch,notes,el:f}; } else cur=null;
+  gridQ.push({t:nextT,i:gridPos});
+}
+function startGrid(){
+  if(!GR.cells.some(c=>c)) return;
+  startAudio(); stopHeld(); if(running) stopTransport(); lastVoicing=null; gridPlaying=true; gridPos=-1;
+  $('gPlay').textContent='■ Arrêter'; $('gPlay').classList.add('on'); startTransport();
+}
+$('gPlay').onclick=()=>{ if(gridPlaying) stopTransport(); else startGrid(); };
+(function gridLoop(){ while(gridQ.length&&gridQ[0].t<=ctx.currentTime){ const {i}=gridQ.shift();
+    document.querySelectorAll('.gcell.play').forEach(x=>x.classList.remove('play')); const d=gcells.querySelector(`[data-i="${i}"]`); if(d) d.classList.add('play');
+    if(cur&&gridPlaying) show(cur.ch,cur.notes,cur.el); else clearShow(); }
+  requestAnimationFrame(gridLoop); })();
+
+/* --- export MIDI : fichier à glisser dans Cubase / Reason, ou à télécharger --- */
+const ascii=s=>s.replace(/𝄫/g,'bb').replace(/𝄪/g,'x').replace(/♭/g,'b').replace(/♯/g,'#').replace(/°/g,'o').replace(/[^\x20-\x7e]/g,'');
+function gridMidiBytes(){
+  const tpq=480, bar=tpq*4, ev=[], txt=(type,s)=>[0xFF,type].concat(vlq(ascii(s).length),[...ascii(s)].map(ch=>ch.charCodeAt(0)));
+  function vlq(n){ const b=[n&0x7f]; while((n>>=7)>0) b.unshift((n&0x7f)|0x80); return b; }
+  const us=Math.round(60000000/P.bpm);
+  ev.push({t:0,p:0,d:txt(0x03,"Grille - Pads d'accords")});
+  ev.push({t:0,p:0,d:[0xFF,0x51,0x03,(us>>16)&255,(us>>8)&255,us&255]});
+  ev.push({t:0,p:0,d:[0xFF,0x58,0x04,4,2,24,8]});
+  const keep=lastVoicing; lastVoicing=null;
+  GR.cells.forEach((c,i)=>{ if(!c) return; const ch=chFromCell(c), notes=voicing(ch.pcs); lastVoicing=notes;
+    const all=notes.slice(); if(hasBass(ch)) all.push(bassMidi(ch,notes)); const t0=i*bar;
+    ev.push({t:t0,p:1,d:txt(0x06,c.name)});
+    all.forEach(m=>{ ev.push({t:t0,p:2,d:[0x90,m,90]}); ev.push({t:t0+bar,p:0,d:[0x80,m,0]}); }); });
+  lastVoicing=keep;
+  ev.sort((a,b)=>a.t-b.t||a.p-b.p);
+  const trk=[]; let last=0; ev.forEach(e=>{ trk.push(...vlq(e.t-last),...e.d); last=e.t; });
+  trk.push(...vlq(Math.max(0,GR.cells.length*bar-last)),0xFF,0x2F,0x00);
+  const u32=n=>[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255];
+  return new Uint8Array([0x4D,0x54,0x68,0x64,0,0,0,6,0,0,0,1,(tpq>>8)&255,tpq&255, 0x4D,0x54,0x72,0x6B,...u32(trk.length),...trk]);
+}
+const midiName=()=>'grille-'+ascii(shortKey()).replace(/\s+/g,'-').replace(/[^\w#-]/g,'')+'.mid';
+const gEmpty=()=>{ if(GR.cells.some(c=>c)) return false; $('gMidiHint').textContent='La grille est vide : glisse d\'abord des pads dedans.'; return true; };
+$('gDrag').addEventListener('dragstart',e=>{
+  if(gEmpty()){ e.preventDefault(); return; }
+  const b=gridMidiBytes(); let s=''; b.forEach(x=>s+=String.fromCharCode(x));
+  e.dataTransfer.effectAllowed='copy';
+  e.dataTransfer.setData('DownloadURL','audio/midi:'+midiName()+':data:audio/midi;base64,'+btoa(s));
+});
+$('gSave').onclick=()=>{ if(gEmpty()) return; const url=URL.createObjectURL(new Blob([gridMidiBytes()],{type:'audio/midi'})); const a=document.createElement('a'); a.href=url; a.download=midiName(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); };
+
+renderGrid();
 
 renderPads(); renderGrilles(); onChange('init');
 

@@ -27,6 +27,8 @@ L'appli fonctionne ensuite **hors ligne** et se met à jour toute seule.
 | **Basse** | Renversements et **basses étrangères** : n'importe quelle note chromatique sous tous les accords (C/E, F/G, D/C, C/B♭…) |
 | **Options** | Choix de l'octave des accords (−1 à +2) ; basse sur la fondamentale ; **enchaînement doux** : l'appli choisit le renversement le plus proche de l'accord précédent |
 | **Affichage** | Nom de l'accord, degré, notes en solfège (Fa La♭ Do), accord sur **double portée** (clés de Sol et de Fa) et petit clavier |
+| **Ma grille** | Fais **glisser les pads** dans une ligne de mesures (jusqu'à 32) ; glisse une mesure sur une autre pour les échanger, ou hors de la grille pour l'effacer. Mode **✎ Écrire** : les pads joués (écran, clavier, MIDI) remplissent les cases une à une. Chaque case garde l'**accord réel** : si tu changes de tonalité, C reste C et la case affiche son nouveau degré (I en C, IV en G…). **Jouer la grille** en boucle avec le rythme et le tempo. Gardée en mémoire dans l'appareil |
+| **Vers Cubase / Reason** | Fais glisser la grille hors de l'appli, en **fichier MIDI**, vers une piste de ton logiciel de musique (Chrome ou Edge sur ordinateur), ou télécharge le fichier |
 | **Grilles à essayer** | En majeur et en mineur : I V VIm IV, II V I, I IV IVm I, I ♭VII IV I, cadence andalouse, tierce picarde… Les pads à jouer sont numérotés dans l'ordre |
 | **Clavier d'ordinateur** | 1 à 7 pour la tonalité, A Z E R T Y U pour les emprunts, Espace pour arrêter le rythme |
 
