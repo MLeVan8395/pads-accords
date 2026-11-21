@@ -123,6 +123,10 @@ body.dragging, body.dragging *{cursor:grabbing!important}
 .mididrag{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--ok) 14%,var(--panel2));border:1px solid var(--ok);color:var(--ok);border-radius:9px;padding:7px 12px;font-size:14px;font-weight:600;cursor:grab;user-select:none;-webkit-user-select:none}
 @media (hover:none){.mididrag{display:none}}
 .ghint{color:var(--muted);font-size:13px}
+.gtrash{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--line);border-radius:10px;padding:7px 14px;color:var(--muted);font-size:14px;min-width:150px;justify-content:center;transition:all .1s}
+body.dragcell .gtrash{border-color:#ff6b6b;color:#ff6b6b;background:color-mix(in srgb,#ff6b6b 8%,transparent)}
+.gtrash.over{background:color-mix(in srgb,#ff6b6b 25%,transparent)!important;border-style:solid;transform:scale(1.06)}
+.btn:disabled{opacity:.4;cursor:default}
 
 .midibar{max-width:1240px;margin:6px auto 0;padding:0 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px;color:var(--muted)}
 .midibar button{background:var(--panel2,#22262f);border:1px solid var(--line,#2e333e);color:var(--text,#ece9e2);border-radius:8px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
@@ -200,16 +204,18 @@ body.dragging, body.dragging *{cursor:grabbing!important}
   </section>
 
   <section class="panel" id="gpanel">
-    <div class="padhead"><h2 style="color:var(--ok)">Ma grille</h2><span class="hint">Fais glisser un pad dans une mesure. Glisse une mesure sur une autre pour les échanger, ou hors de la grille pour l'effacer.</span></div>
+    <div class="padhead"><h2 style="color:var(--ok)">Ma grille</h2><span class="hint">Fais glisser un pad dans une mesure. Glisse une mesure sur une autre pour les échanger, ou dans la corbeille pour l'effacer.</span></div>
     <div class="gtools">
       <button class="btn" id="gPlay" type="button">▶ Jouer la grille</button>
       <select id="gPattern" aria-label="Rythme de la grille"></select>
       <input type="range" id="gBpm" min="50" max="180" step="1" aria-label="Tempo de la grille"><output id="gBpmOut"></output>
       <button class="btn" id="gWrite" type="button" aria-pressed="false">✎ Écrire</button>
       <span class="field"><span class="lbl">Mesures</span><button class="btn" id="gLess" type="button" aria-label="Une mesure de moins">−</button><output id="gCount" style="min-width:22px;text-align:center"></output><button class="btn" id="gMore" type="button" aria-label="Une mesure de plus">+</button></span>
+      <button class="btn" id="gUndo" type="button" disabled title="Annuler (Ctrl+Z)">↶ Annuler</button>
       <button class="btn" id="gClear" type="button">Effacer la grille</button>
     </div>
     <div class="gcells" id="gcells" aria-label="Ma grille d'accords"></div>
+    <div class="gtools" style="margin-top:10px;margin-bottom:0"><span class="gtrash" id="gTrash" aria-label="Corbeille">🗑 Corbeille</span><span class="ghint">Glisse une mesure ici pour l'effacer.</span></div>
     <div class="gtools" style="margin-top:12px;margin-bottom:0">
       <span class="mididrag" id="gDrag" draggable="true" title="Fais glisser ce bouton sur une piste de Cubase ou de Reason">⇩ Glisser la grille vers Cubase / Reason</span>
       <button class="btn" id="gSave" type="button">Télécharger le fichier MIDI</button>
@@ -218,6 +224,7 @@ body.dragging, body.dragging *{cursor:grabbing!important}
     <details class="help"><summary>Comprendre : ma grille</summary>
       <p>Chaque case garde l'<b>accord réel</b> que tu y as déposé : son nom, ses notes, sa basse et son nombre de sons. Si tu changes de tonalité, <b>C reste C</b>. La case affiche alors son <b>nouveau degré</b> : C est I en C, mais IV en G et ♭VI en Em. Le degré d'origine reste écrit en dessous. Si l'accord n'existe pas dans la nouvelle tonalité, la case l'indique (« hors de G ») : c'est peut-être un emprunt ou une dominante secondaire à découvrir.</p>
       <p>Pour <b>transposer</b> toute une grille, c'est l'inverse : il faut garder les degrés et changer les accords. Compare les deux !</p>
+      <p><b>↶ Annuler</b> (ou Ctrl+Z) revient en arrière, une action à la fois : accord déposé, mesures échangées, effacées ou ajoutées, grille effacée. Pour effacer une mesure, glisse-la dans la <b>🗑 Corbeille</b> (ou touche sa petite croix ×).</p>
       <p><b>✎ Écrire</b> : touche une case (elle s'entoure de vert), puis joue les pads à l'écran, au clavier d'ordinateur ou au clavier MIDI : chaque accord joué remplit la case et passe à la suivante.</p>
       <p><b>Vers Cubase ou Reason</b> (Chrome ou Edge sur ordinateur) : fais glisser le bouton vert sur une piste d'instrument. Si ton logiciel refuse, glisse-le d'abord sur le bureau, puis du bureau vers la piste, ou utilise « Télécharger le fichier MIDI ».</p>
     </details>
@@ -631,6 +638,7 @@ function markGrille(gr){
 // Une case garde l'accord RÉEL (nom, notes, basse, nombre de sons) : changer de tonalité ne le modifie pas.
 const GR={cells:Array(8).fill(null), cursor:0, write:false, max:32};
 try{ const s=JSON.parse(localStorage.getItem('pads-grille')||'null'); if(s&&Array.isArray(s.cells)&&s.cells.length) GR.cells=s.cells.slice(0,GR.max); }catch(e){}
+const gHist=[];
 const gStore=()=>{ try{ localStorage.setItem('pads-grille',JSON.stringify({cells:GR.cells})); }catch(e){} };
 const shortKey=()=>{ const t=TONICS[P.tonic][0]; return P.mode==='ionien'?t:P.mode==='eolien'?t+'m':t+' '+MODES[P.mode].n.toLowerCase(); };
 const sigOf=ch=>ch.pcs.join(',')+'/'+(ch.bassPc??'');
@@ -673,7 +681,7 @@ function renderGrid(){
   if(GR.cells.length<GR.max){ const a=document.createElement('div'); a.className='gcell gadd'; a.innerHTML='<span>＋</span><span class="hintdrop">mesure</span>'; box.appendChild(a); }
   $('gCount').textContent=GR.cells.length;
 }
-function setCells(cells){ GR.cells=cells; if(GR.cursor>=GR.cells.length) GR.cursor=GR.cells.length-1; gStore(); renderGrid(); }
+function setCells(cells,noHist){ if(!noHist&&JSON.stringify(cells)!==JSON.stringify(GR.cells)){ gHist.push(GR.cells.slice()); if(gHist.length>60) gHist.shift(); } $('gUndo').disabled=!gHist.length; GR.cells=cells; if(GR.cursor>=GR.cells.length) GR.cursor=GR.cells.length-1; gStore(); renderGrid(); }
 
 /* --- glisser-déposer (souris, doigt ou stylet) --- */
 const DR={src:null, ghost:null, x:0, y:0, raf:0};
@@ -681,21 +689,23 @@ function dragStart(src,x,y){
   DR.src=src; const g=document.createElement('div'); g.className='dragghost'; g.textContent=src.cell.name;
   g.style.setProperty('--c',`var(--${src.cell.cls==='home'?'home':src.cell.cls})`); document.body.appendChild(g); DR.ghost=g;
   document.body.classList.add('dragging');
-  if(src.kind==='cell'){ const el=$('gcells').querySelector(`[data-i="${src.i}"]`); if(el) el.classList.add('dragsrc'); }
+  if(src.kind==='cell'){ document.body.classList.add('dragcell'); const el=$('gcells').querySelector(`[data-i="${src.i}"]`); if(el) el.classList.add('dragsrc'); }
   dragMove(x,y); DR.raf=requestAnimationFrame(autoScroll);
 }
-function targetAt(x,y){ const el=document.elementFromPoint(x,y); return { cell: el&&el.closest('.gcell'), inGrid: !!(el&&el.closest('#gpanel')) }; }
+function targetAt(x,y){ const el=document.elementFromPoint(x,y); return { cell: el&&el.closest('.gcell'), trash: !!(el&&el.closest('#gTrash')), inGrid: !!(el&&el.closest('#gpanel')) }; }
 function dragMove(x,y){
   DR.x=x; DR.y=y; DR.ghost.style.left=x+'px'; DR.ghost.style.top=y+'px';
   const t=targetAt(x,y); document.querySelectorAll('.gcell.over').forEach(c=>c.classList.remove('over')); if(t.cell) t.cell.classList.add('over');
-  const del=DR.src.kind==='cell'&&!t.inGrid; DR.ghost.classList.toggle('del',del); DR.ghost.textContent=(del?'🗑 ':'')+DR.src.cell.name;
+  $('gTrash').classList.toggle('over',t.trash&&DR.src.kind==='cell');
+  const del=DR.src.kind==='cell'&&(t.trash||!t.inGrid); DR.ghost.classList.toggle('del',del); DR.ghost.textContent=(del?'🗑 ':'')+DR.src.cell.name;
 }
 function autoScroll(){ if(!DR.src) return; const m=70; if(DR.y<m) window.scrollBy(0,-14); else if(DR.y>window.innerHeight-m) window.scrollBy(0,14); DR.raf=requestAnimationFrame(autoScroll); }
 function dragEnd(x,y,cancel){
   const src=DR.src; if(!src) return; const t=cancel?{cell:null,inGrid:true}:targetAt(x,y);
-  cancelAnimationFrame(DR.raf); DR.ghost.remove(); DR.ghost=null; DR.src=null; document.body.classList.remove('dragging');
+  cancelAnimationFrame(DR.raf); DR.ghost.remove(); DR.ghost=null; DR.src=null; document.body.classList.remove('dragging','dragcell'); $('gTrash').classList.remove('over');
   const cells=GR.cells.slice();
-  if(t.cell&&t.cell.classList.contains('gadd')){ if(cells.length<GR.max){ cells.push(src.cell); if(src.kind==='cell') cells[src.i]=null; } }
+  if(t.trash){ if(src.kind==='cell') cells[src.i]=null; }
+  else if(t.cell&&t.cell.classList.contains('gadd')){ if(cells.length<GR.max){ cells.push(src.cell); if(src.kind==='cell') cells[src.i]=null; } }
   else if(t.cell){ const j=+t.cell.dataset.i; if(src.kind==='pad') cells[j]=src.cell; else if(j!==src.i){ const tmp=cells[j]; cells[j]=cells[src.i]; cells[src.i]=tmp; } }
   else if(src.kind==='cell'&&!t.inGrid) cells[src.i]=null;
   setCells(cells);
@@ -704,7 +714,7 @@ function cancelPress(b){ // le doigt a bougé : ce n'était pas un appui pour jo
   b.classList.remove('down');
   if(P.play==='rythme'){ if(b._wasRunning) cur=b._prevCur; else stopTransport(); }
   else if(held&&held.el===b){ stopHeld(); clearShow(); }
-  if(GR.lastWrite&&GR.lastWrite.el===b){ GR.cells[GR.lastWrite.i]=GR.lastWrite.prev; GR.cursor=GR.lastWrite.i; GR.lastWrite=null; gStore(); renderGrid(); }
+  if(GR.lastWrite&&GR.lastWrite.el===b){ GR.cells[GR.lastWrite.i]=GR.lastWrite.prev; gHist.length=GR.lastWrite.h; $('gUndo').disabled=!gHist.length; GR.cursor=GR.lastWrite.i; GR.lastWrite=null; gStore(); renderGrid(); }
 }
 function padDragHooks(b){
   b.addEventListener('pointerdown',e=>{ b._st={x:e.clientX,y:e.clientY}; },true);
@@ -740,7 +750,7 @@ gcells.addEventListener('click',e=>{ const x=e.target.closest('.x'); if(!x) retu
 function toggleWrite(on){ GR.write=on; $('gWrite').classList.toggle('on',on); $('gWrite').setAttribute('aria-pressed',on); renderGrid(); }
 $('gWrite').onclick=()=>{ if(!GR.write){ const f=GR.cells.findIndex(c=>!c); GR.cursor=f>=0?f:0; } toggleWrite(!GR.write); };
 function gridWrite(el){
-  const i=GR.cursor; GR.lastWrite={el,i,prev:GR.cells[i]}; const cells=GR.cells.slice(); cells[i]=cellFromPad(el);
+  const i=GR.cursor; GR.lastWrite={el,i,prev:GR.cells[i],h:gHist.length}; const cells=GR.cells.slice(); cells[i]=cellFromPad(el);
   if(i+1>=cells.length && cells.length<GR.max) cells.push(null);
   GR.cursor=Math.min(i+1,cells.length-1); setCells(cells);
 }
@@ -748,6 +758,9 @@ function gridWrite(el){
 /* --- nombre de mesures, effacer, copier une grille à essayer --- */
 $('gLess').onclick=()=>{ if(GR.cells.length>1) setCells(GR.cells.slice(0,-1)); };
 $('gMore').onclick=()=>{ if(GR.cells.length<GR.max) setCells(GR.cells.concat([null])); };
+function gUndo(){ if(!gHist.length) return; const prev=gHist.pop(); GR.lastWrite=null; setCells(prev,true); }
+$('gUndo').onclick=gUndo;
+window.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'&&!/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)){ e.preventDefault(); gUndo(); } });
 $('gClear').onclick=()=>{ if(GR.cells.some(c=>c)&&!confirm('Effacer toute la grille ?')) return; GR.cursor=0; setCells(Array(8).fill(null)); };
 function copyGrille(gr){
   const cells=gr.g.map(tok=>{ let el=homeEls.find(p=>p._ch.tri===tok); if(!el) el=secEls.find(p=>p._ch.tri===tok); if(!el) el=borEls.find(p=>p._ch.tri===tok&&!p.classList.contains('same')); return el?cellFromPad(el):null; });
